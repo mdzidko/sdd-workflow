@@ -1494,8 +1494,6 @@ export function registerBundleOperations(handlers) {
       const githubConfigured =
         typeof profile.github?.owner === 'string' &&
         typeof profile.github?.name === 'string' &&
-        Array.isArray(profile.github.required_reviewers) &&
-        profile.github.required_reviewers.length > 0 &&
         Array.isArray(profile.github.required_checks) &&
         profile.github.required_checks.length > 0;
       add(
@@ -1507,9 +1505,9 @@ export function registerBundleOperations(handlers) {
           : 'NOT_CONFIGURED',
         githubConfigured
           ? env.GH_TOKEN || env.GITHUB_TOKEN
-            ? 'Repository, reviewer, check, and credential references are configured; live authentication and policy remain unverified.'
+            ? 'Repository and check references are configured; live authentication and policy remain unverified.'
             : 'GitHub profile is present, but no protected process token is available.'
-          : 'Configure repository identity, permitted human reviewers, and required checks before GitHub acceptance.',
+          : 'Configure repository identity and required checks before GitHub acceptance.',
       );
       if (!profile.delivery?.compose) {
         add(

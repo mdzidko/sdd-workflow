@@ -654,15 +654,6 @@ export function registerGithubOperations(handlers) {
       'STALE_ARTIFACT',
       'The decision subject changed after registration; refresh and review its current content.',
     );
-    const reviewers = profile.github.required_reviewers;
-    requireValue(
-      Array.isArray(reviewers) &&
-        reviewers.length > 0 &&
-        new Set(reviewers.map((login) => String(login).toLowerCase())).size === reviewers.length &&
-        reviewers.every((login) => typeof login === 'string' && /^[A-Za-z0-9-]{1,39}$/.test(login)),
-      'GITHUB_CONFIG_INVALID',
-      'Configure a non-empty unique list of permitted human GitHub reviewers.',
-    );
     const automationLogins = profile.github.automation_logins ?? [];
     requireValue(
       Array.isArray(automationLogins) &&
@@ -793,7 +784,7 @@ export function registerGithubOperations(handlers) {
             request_changes: `CHANGES_REQUESTED ${marker}`,
           },
           message:
-            'A permitted human reviewer must comment on the linked Issue with one of the exact decision prefixes and this marker. This path is only for no-file BUGFIX evidence.',
+            'An authenticated human must comment on the linked Issue with one of the exact decision prefixes and this marker. This path is only for no-file BUGFIX evidence.',
         };
       }
       const [login, { comment, decision: action }] = latestDecision;
@@ -857,7 +848,6 @@ export function registerGithubOperations(handlers) {
       'GITHUB_LIST_INCOMPLETE',
       'GitHub did not return the complete review history; refusing to infer a business decision.',
     );
-    const permitted = new Set(reviewers.map((login) => login.toLowerCase()));
     const automation = new Set(automationLogins.map((login) => login.toLowerCase()));
     const latestByReviewer = new Map();
     for (const review of data) {
@@ -878,8 +868,6 @@ export function registerGithubOperations(handlers) {
       .filter(([login, item]) => {
         const review = item.review;
         return (
-          permitted.has(login) &&
-          login !== pull.author_login?.toLowerCase() &&
           !automation.has(login) &&
           review.user?.type === 'User' &&
           review.commit_id === pull.head_sha &&
@@ -922,7 +910,7 @@ export function registerGithubOperations(handlers) {
         pull_request_url: pull.url,
         required_marker: marker,
         message:
-          'A permitted human reviewer must submit a GitHub pull request review containing this exact marker. Approve accepts the artifact; request changes rejects it.',
+          'An authenticated human must submit a GitHub pull request review containing this exact marker. Approve accepts the artifact; request changes rejects it.',
         previous_decision_invalidated: previousDecisionInvalidated,
       };
     }
@@ -1025,7 +1013,7 @@ export function registerGithubOperations(handlers) {
       tasks.length > 0 &&
         tasks.every((task) => task.state === 'DONE' && task.review?.status === 'ACCEPTED'),
       'TASKS_INCOMPLETE',
-      'Every planned task must be complete with an accepted independent review before marking the pull request ready.',
+      'Every planned task must be complete with an accepted human review before marking the pull request ready.',
     );
     for (const task of tasks) {
       const review = await handlers['review.resolve'](
@@ -1116,15 +1104,6 @@ export function registerGithubOperations(handlers) {
       'TASK_NOT_READY',
       'The task is not awaiting review or has no bound review marker.',
     );
-    const reviewers = profile.github.required_reviewers;
-    requireValue(
-      Array.isArray(reviewers) &&
-        reviewers.length > 0 &&
-        new Set(reviewers.map((login) => String(login).toLowerCase())).size === reviewers.length &&
-        reviewers.every((login) => typeof login === 'string' && /^[A-Za-z0-9-]{1,39}$/.test(login)),
-      'GITHUB_CONFIG_INVALID',
-      'Configure a non-empty unique list of permitted human GitHub reviewers.',
-    );
     const automationLogins = profile.github.automation_logins ?? [];
     requireValue(
       Array.isArray(automationLogins) &&
@@ -1173,7 +1152,6 @@ export function registerGithubOperations(handlers) {
       'GitHub did not return the complete review history; refusing to infer human approval.',
     );
     const automation = new Set(automationLogins.map((login) => login.toLowerCase()));
-    const permitted = new Set(reviewers.map((login) => login.toLowerCase()));
     const latestByReviewer = new Map();
     for (const review of data) {
       if (
@@ -1207,8 +1185,6 @@ export function registerGithubOperations(handlers) {
     const currentDecisions = [...latestByReviewer.entries()].filter(([login, item]) => {
       const review = item.review;
       return (
-        permitted.has(login) &&
-        login !== pull.author_login?.toLowerCase() &&
         !automation.has(login) &&
         review.user?.type === 'User' &&
         ['APPROVED', 'CHANGES_REQUESTED'].includes(review.state) &&
@@ -1251,7 +1227,7 @@ export function registerGithubOperations(handlers) {
       }
       throw new WorkflowError(
         'REVIEW_REQUIRED',
-        'No current decision from a permitted human reviewer is bound to this exact task result and pull request head.',
+        'No current decision from an authenticated human is bound to this exact task result and pull request head.',
       );
     }
     const [login, { review }] = decision;
@@ -1350,7 +1326,7 @@ export function registerGithubOperations(handlers) {
       tasks.length > 0 &&
         tasks.every((task) => task.state === 'DONE' && task.review?.status === 'ACCEPTED'),
       'TASKS_INCOMPLETE',
-      'Every planned task must have an accepted independent review before merge.',
+      'Every planned task must have an accepted human review before merge.',
     );
     for (const task of tasks) {
       const review = await handlers['review.resolve'](
