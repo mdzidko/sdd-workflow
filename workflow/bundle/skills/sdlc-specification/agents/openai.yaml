@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sdlc Specification"
+  short_description: "Operation-backed SDLC specialist workflow"
+  default_prompt: "Use $sdlc-specification for the assigned workflow task."

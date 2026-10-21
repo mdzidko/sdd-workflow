@@ -1,0 +1,14 @@
+{
+  "schema_version": "1",
+  "type": "branch-identity",
+  "id": "EXAMPLE-001",
+  "change_id": "EXAMPLE",
+  "title": "Synthetic format example; not execution evidence",
+  "status": "draft",
+  "data": {
+    "branch": "Example value",
+    "base_branch": "Example value",
+    "base_sha": "Example value",
+    "change_kind": "Example value"
+  }
+}

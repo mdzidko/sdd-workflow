@@ -1,0 +1,6 @@
+.git/
+.workflow/
+.workflow-runtime/
+node_modules/
+docs/
+workflow/bundle/

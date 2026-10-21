@@ -1,0 +1,13 @@
+{
+  "schema_version": "1",
+  "type": "verification-schedule",
+  "id": "EXAMPLE-001",
+  "change_id": "EXAMPLE",
+  "title": "Synthetic format example; not execution evidence",
+  "status": "draft",
+  "data": {
+    "environments": [],
+    "expected_costs": [],
+    "impact_expansion_rules": []
+  }
+}

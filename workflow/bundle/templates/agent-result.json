@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "type": "agent-result",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "task_id": "",
+    "role": "",
+    "result": "",
+    "artifacts": [],
+    "evidence_refs": [],
+    "problems": [],
+    "next_action": ""
+  }
+}

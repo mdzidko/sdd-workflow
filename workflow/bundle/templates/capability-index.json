@@ -1,0 +1,14 @@
+{
+  "schema_version": "1",
+  "type": "capability-index",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "capabilities": [],
+    "architecture_refs": [],
+    "limitations": [],
+    "release_refs": []
+  }
+}

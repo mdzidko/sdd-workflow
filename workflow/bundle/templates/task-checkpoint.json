@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "type": "task-checkpoint",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "task_id": "",
+    "source_sha": "",
+    "commit_sha": "",
+    "branch": "",
+    "paths": [],
+    "push_status": "",
+    "receipt_ids": []
+  }
+}

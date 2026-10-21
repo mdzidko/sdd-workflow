@@ -1,0 +1,20 @@
+{
+  "schema_version": "1",
+  "acceptance_service": "acceptance-tests",
+  "migrations": [],
+  "images": [
+    {
+      "id": "web",
+      "service": "web",
+      "context": "apps/web",
+      "dockerfile": "apps/web/Dockerfile",
+      "target": "runtime"
+    },
+    {
+      "id": "api",
+      "service": "api",
+      "context": "services/api",
+      "dockerfile": "services/api/Dockerfile"
+    }
+  ]
+}

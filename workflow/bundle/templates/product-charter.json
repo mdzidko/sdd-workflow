@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "type": "product-charter",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "problem": "",
+    "users": [],
+    "goals": [],
+    "success_measures": [],
+    "assumptions": []
+  }
+}

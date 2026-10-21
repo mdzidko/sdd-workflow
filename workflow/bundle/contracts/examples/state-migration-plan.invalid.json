@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "type": "state-migration-plan",
+  "id": "EXAMPLE-001",
+  "change_id": "EXAMPLE",
+  "title": "Synthetic format example; not execution evidence",
+  "status": "draft",
+  "data": {
+    "target_version": "Example value",
+    "affected_changes": [],
+    "transformations": [],
+    "verification": [],
+    "recovery": "Example value",
+    "approval_ref": "Example value"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "type": "impact-map",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "applications": [],
+    "contracts": [],
+    "data_changes": [],
+    "exclusions": [],
+    "compatibility": []
+  }
+}

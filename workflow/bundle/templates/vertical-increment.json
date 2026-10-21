@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "type": "vertical-increment",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "behavior": "",
+    "scenario_ids": [],
+    "application_ids": [],
+    "task_ids": [],
+    "demonstration": "",
+    "completion_criteria": []
+  }
+}

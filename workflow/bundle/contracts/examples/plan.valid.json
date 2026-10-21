@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "type": "plan",
+  "id": "EXAMPLE-001",
+  "change_id": "EXAMPLE",
+  "title": "Synthetic format example; not execution evidence",
+  "status": "draft",
+  "data": {
+    "specification_ref": "Example value",
+    "increments": [],
+    "tasks": [],
+    "coverage": [],
+    "verification_schedule": [],
+    "risks": []
+  }
+}

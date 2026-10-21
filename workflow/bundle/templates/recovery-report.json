@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "type": "recovery-report",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "environment": "",
+    "failed_deployment_ref": "",
+    "target_release_ref": "",
+    "data_compatibility": "",
+    "actions": [],
+    "outcome": "",
+    "verification_refs": []
+  }
+}

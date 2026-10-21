@@ -1,0 +1,64 @@
+{
+  "applications": [
+    { "id": "api", "path": "services/api" },
+    { "id": "web", "path": "apps/web" }
+  ],
+  "commands": {
+    "api-unit": {
+      "command": "npm",
+      "args": ["test"],
+      "timeout_ms": 60000,
+      "category": "unit",
+      "cadence": "task",
+      "application_ids": ["api"]
+    },
+    "web-unit": {
+      "command": "npm",
+      "args": ["test"],
+      "timeout_ms": 60000,
+      "category": "unit",
+      "cadence": "task",
+      "application_ids": ["web"]
+    },
+    "api-integration": {
+      "command": "npm",
+      "args": ["run", "test:integration"],
+      "timeout_ms": 120000,
+      "category": "integration",
+      "cadence": "increment",
+      "application_ids": ["api"]
+    },
+    "web-integration": {
+      "command": "npm",
+      "args": ["run", "test:integration"],
+      "timeout_ms": 120000,
+      "category": "integration",
+      "cadence": "increment",
+      "application_ids": ["web"]
+    },
+    "api-acceptance": {
+      "command": "npm",
+      "args": ["run", "test:e2e"],
+      "timeout_ms": 300000,
+      "category": "e2e",
+      "cadence": "merge",
+      "application_ids": ["api"]
+    },
+    "web-acceptance": {
+      "command": "npm",
+      "args": ["run", "test:e2e"],
+      "timeout_ms": 300000,
+      "category": "e2e",
+      "cadence": "merge",
+      "application_ids": ["web"]
+    },
+    "system-e2e": {
+      "command": "npm",
+      "args": ["run", "test:e2e"],
+      "timeout_ms": 300000,
+      "category": "e2e",
+      "cadence": "merge",
+      "application_ids": ["*"]
+    }
+  }
+}

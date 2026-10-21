@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "type": "release-notes",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "version": "",
+    "features": [],
+    "fixes": [],
+    "limitations": [],
+    "migrations": [],
+    "compatibility": []
+  }
+}

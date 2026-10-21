@@ -1,0 +1,111 @@
+name: Publish release from verified image candidate
+run-name: Publish release v${{ inputs.version }} from candidate run ${{ inputs.source_run_id }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Successful run ID from Publish and verify image candidates
+        required: true
+        type: string
+      source_sha:
+        description: Full source commit SHA recorded by the candidate run
+        required: true
+        type: string
+      version:
+        description: Semantic version without a leading v, for example 1.2.3
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: image-release-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  validate-candidate:
+    if: github.ref_type == 'branch' && github.ref_name == vars.WORKFLOW_INTEGRATION_BRANCH
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: verified-candidate-set
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: ${{ runner.temp }}/verified-candidate
+      - name: Inspect the source workflow run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: gh run view "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --json databaseId,conclusion,headSha,headBranch,event,workflowName > "$RUNNER_TEMP/source-run.json"
+      - name: Validate source evidence and prepare an immutable release manifest
+        env:
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          VERSION: ${{ inputs.version }}
+          INTEGRATION_BRANCH: ${{ vars.WORKFLOW_INTEGRATION_BRANCH }}
+          IMAGE_OWNER: ${{ github.repository_owner }}
+          IMAGE_REPOSITORY: ${{ github.event.repository.name }}
+        run: >-
+          node .workflow/tools/container-images.mjs release-prepare
+          --catalog .github/container-images.json
+          --candidate-set "$RUNNER_TEMP/verified-candidate/candidate-set.json"
+          --source-run "$RUNNER_TEMP/source-run.json"
+          --source-run-id "$SOURCE_RUN_ID"
+          --source-sha "$SOURCE_SHA"
+          --integration-branch "$INTEGRATION_BRANCH"
+          --version "$VERSION"
+          --owner "$IMAGE_OWNER"
+          --repository "$IMAGE_REPOSITORY"
+          --output "$RUNNER_TEMP/release-manifest.json"
+          --notes-output "$RUNNER_TEMP/release-notes.md"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: validated-release-${{ inputs.version }}
+          path: |
+            ${{ runner.temp }}/release-manifest.json
+            ${{ runner.temp }}/release-notes.md
+          if-no-files-found: error
+          retention-days: 7
+
+  publish-release:
+    needs: validate-candidate
+    if: needs.validate-candidate.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: workflow-release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: validated-release-${{ inputs.version }}
+          path: ${{ runner.temp }}/release
+      - name: Publish or safely reconcile the release with its verified digest manifest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+          SOURCE_SHA: ${{ inputs.source_sha }}
+        run: >-
+          node .workflow/tools/release-publisher.mjs publish
+          --repository "$GITHUB_REPOSITORY"
+          --tag "v$VERSION"
+          --source-sha "$SOURCE_SHA"
+          --manifest "$RUNNER_TEMP/release/release-manifest.json"
+          --notes "$RUNNER_TEMP/release/release-notes.md"

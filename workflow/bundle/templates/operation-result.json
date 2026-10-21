@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "type": "operation-result",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "operation": "",
+    "request_id": "",
+    "outcome": "",
+    "source_sha": "",
+    "evidence": [],
+    "effects": [],
+    "errors": []
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "type": "risk-record",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "description": "",
+    "likelihood": "",
+    "impact": "",
+    "mitigation": "",
+    "owner": "",
+    "status": ""
+  }
+}

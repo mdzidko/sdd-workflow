@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "type": "plan",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "specification_ref": "",
+    "increments": [],
+    "tasks": [],
+    "coverage": [],
+    "verification_schedule": [],
+    "risks": []
+  }
+}

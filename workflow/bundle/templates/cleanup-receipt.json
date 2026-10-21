@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "type": "cleanup-receipt",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "branch": "",
+    "merge_sha": "",
+    "local_status": "",
+    "remote_status": "",
+    "preserved_work": []
+  }
+}

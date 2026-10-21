@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "repository",
+    "applications",
+    "commands"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "bundle_version": {
+      "type": "string"
+    },
+    "bundle_hash": {
+      "type": ["string", "null"],
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "repository": {
+      "type": "object",
+      "required": [
+        "remote",
+        "base_branch"
+      ],
+      "properties": {
+        "remote": {
+          "type": "string",
+          "minLength": 1
+        },
+        "base_branch": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "applications": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "commands": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "command",
+          "args",
+          "timeout_ms"
+        ],
+        "properties": {
+          "command": {
+            "type": "string",
+            "minLength": 1
+          },
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "timeout_ms": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "environments": {
+      "type": "object"
+    },
+    "github": {
+      "type": "object"
+    },
+    "registry": {
+      "type": "object"
+    },
+    "delivery": {
+      "type": "object",
+      "properties": {
+        "compose": {
+          "type": "object",
+          "required": [
+            "file",
+            "project_name",
+            "readiness_timeout_ms",
+            "verification_profiles"
+          ],
+          "properties": {
+            "file": {
+              "type": "string",
+              "minLength": 1
+            },
+            "project_name": {
+              "type": "string",
+              "pattern": "^[a-z0-9][a-z0-9_-]{0,62}$"
+            },
+            "readiness_timeout_ms": {
+              "type": "integer",
+              "minimum": 1000,
+              "maximum": 600000
+            },
+            "verification_profiles": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "capabilities": {
+      "type": "object"
+    }
+  }
+}

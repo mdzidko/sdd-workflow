@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "type": "context-package",
+  "id": "EXAMPLE-001",
+  "change_id": "EXAMPLE",
+  "title": "Synthetic format example; not execution evidence",
+  "status": "draft",
+  "data": {
+    "base_sha": "Example value",
+    "approved_intent": [],
+    "implemented_behavior": [],
+    "planned_capabilities": [],
+    "sources": [],
+    "constraints": [],
+    "unknowns": []
+  }
+}

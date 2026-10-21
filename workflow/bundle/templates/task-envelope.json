@@ -1,0 +1,22 @@
+{
+  "schema_version": "1",
+  "type": "task-envelope",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "role": "",
+    "goal": "",
+    "input_refs": [],
+    "scenario_ids": [],
+    "ownership": [],
+    "allowed_operations": [],
+    "outputs": [],
+    "dependencies": [],
+    "completion_criteria": [],
+    "evidence_requirements": [],
+    "limits": {},
+    "escalation_conditions": []
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "type": "review-resolution",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "finding_id": "",
+    "response": "",
+    "changes": [],
+    "evidence_refs": [],
+    "disposition": ""
+  }
+}

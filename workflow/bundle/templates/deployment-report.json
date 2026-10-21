@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "type": "deployment-report",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "environment": "",
+    "release_ref": "",
+    "previous_release_ref": "",
+    "outcome": "",
+    "deployed_artifacts": [],
+    "migrations": [],
+    "verification_refs": []
+  }
+}

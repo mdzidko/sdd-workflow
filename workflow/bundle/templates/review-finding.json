@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "type": "review-finding",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "review_id": "",
+    "severity": "",
+    "subject": "",
+    "location": "",
+    "description": "",
+    "expected": "",
+    "correction": ""
+  }
+}

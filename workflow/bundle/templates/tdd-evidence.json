@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "type": "tdd-evidence",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "task_id": "",
+    "phase": "",
+    "source_sha": "",
+    "test_ids": [],
+    "run_id": "",
+    "classification": ""
+  }
+}

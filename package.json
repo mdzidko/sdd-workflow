@@ -1,0 +1,26 @@
+{
+  "name": "codex-sdlc-workflow",
+  "version": "0.1.28",
+  "private": true,
+  "type": "module",
+  "description": "Reusable Codex skills and deterministic software delivery operations",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test --test-concurrency=2 tests/workflow/*.test.mjs",
+    "test:codex-live": "node --test tests/workflow/codex-live-acceptance.test.mjs",
+    "test:docker-live": "node --test tests/workflow/docker-live-acceptance.test.mjs",
+    "workflow": "node scripts/workflow/run.mjs",
+    "check": "node scripts/workflow/check.mjs",
+    "lint": "eslint eslint.config.mjs \"workflow/**/*.mjs\" \"scripts/workflow/**/*.mjs\" \"tests/workflow/**/*.mjs\"",
+    "format": "prettier --write \"eslint.config.mjs\" \"workflow/**/*.mjs\" \"scripts/workflow/**/*.mjs\" \"tests/workflow/**/*.mjs\"",
+    "format:check": "prettier --check \"eslint.config.mjs\" \"workflow/**/*.mjs\" \"scripts/workflow/**/*.mjs\" \"tests/workflow/**/*.mjs\""
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.13.0",
+    "globals": "17.13.0",
+    "prettier": "3.6.2"
+  }
+}

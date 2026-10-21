@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "type": "review-report",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "subject_refs": [],
+    "reviewer_identity": "",
+    "author_identity": "",
+    "outcome": "",
+    "findings": [],
+    "evidence_refs": []
+  }
+}

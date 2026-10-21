@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "type": "escalation",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "reason": "",
+    "attempts": [],
+    "evidence_refs": [],
+    "options": [],
+    "recommendation": "",
+    "decision_needed": ""
+  }
+}

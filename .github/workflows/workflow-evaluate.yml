@@ -1,0 +1,105 @@
+name: Evaluate workflow candidate (does not activate)
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Exact 40-character commit SHA to evaluate
+        required: true
+        type: string
+      change_id:
+        description: Registered WORKFLOW_CHANGE identifier
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Require the trusted integration branch
+        env:
+          WORKFLOW_REF: ${{ github.ref }}
+          EXPECTED_BASE_BRANCH: ${{ vars.WORKFLOW_BASE_BRANCH || github.event.repository.default_branch }}
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+          CHANGE_ID: ${{ inputs.change_id }}
+        run: |
+          if [[ -z "$EXPECTED_BASE_BRANCH" || "$WORKFLOW_REF" != "refs/heads/$EXPECTED_BASE_BRANCH" ]]; then
+            echo "::error::Dispatch this evaluator from the configured integration branch, where its policy is reviewed."
+            exit 1
+          fi
+          if [[ ! "$CANDIDATE_SHA" =~ ^[a-f0-9]{40}$ ]]; then
+            echo "::error::candidate_sha must be an exact 40-character commit SHA."
+            exit 1
+          fi
+          if [[ ! "$CHANGE_ID" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$ ]]; then
+            echo "::error::change_id must be a portable workflow change identifier."
+            exit 1
+          fi
+
+      - name: Check out the pinned evaluator from the integration branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ vars.WORKFLOW_BASE_BRANCH || github.event.repository.default_branch }}
+          path: evaluator
+          persist-credentials: false
+
+      - name: Check out the candidate without credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ inputs.candidate_sha }}
+          path: candidate
+          persist-credentials: false
+
+      - name: Verify candidate identity
+        working-directory: candidate
+        env:
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+        run: |
+          actual_sha="$(git rev-parse HEAD)"
+          if [[ "$actual_sha" != "$CANDIDATE_SHA" ]]; then
+            echo "::error::Checked out commit does not match candidate_sha."
+            exit 1
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+
+      - name: Evaluate candidate tests and bundle
+        id: candidate_checks
+        continue-on-error: true
+        working-directory: candidate
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run format:check
+          npm run check
+          npm test
+
+      - name: Write evaluation report
+        if: always()
+        env:
+          EVALUATOR_SHA: ${{ github.sha }}
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+          CHANGE_ID: ${{ inputs.change_id }}
+          CHECK_RESULT: ${{ steps.candidate_checks.outcome }}
+        run: |
+          node evaluator/scripts/workflow/evaluation-report.mjs evaluation/evaluation-report.json candidate
+
+      - name: Retain evaluation report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: workflow-evaluation-${{ github.run_id }}-${{ github.run_attempt }}
+          path: evaluation/evaluation-report.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Fail when candidate evaluation did not pass
+        if: steps.candidate_checks.outcome != 'success'
+        run: exit 1

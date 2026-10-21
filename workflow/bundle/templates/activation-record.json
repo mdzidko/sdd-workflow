@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "type": "activation-record",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "previous_version": "",
+    "candidate_version": "",
+    "approval_ref": "",
+    "verification_refs": [],
+    "activated_at": ""
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "type": "merge-receipt",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "pr_url": "",
+    "source_sha": "",
+    "merge_sha": "",
+    "base_branch": "",
+    "approval_refs": [],
+    "check_refs": []
+  }
+}

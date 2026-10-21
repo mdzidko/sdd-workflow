@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "type": "review-report",
+  "id": "EXAMPLE-001",
+  "change_id": "EXAMPLE",
+  "title": "Synthetic format example; not execution evidence",
+  "status": "draft",
+  "data": {
+    "subject_refs": [],
+    "reviewer_identity": "Example value",
+    "author_identity": "Example value",
+    "outcome": "Example value",
+    "findings": [],
+    "evidence_refs": []
+  }
+}

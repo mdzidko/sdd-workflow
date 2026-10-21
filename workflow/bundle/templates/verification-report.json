@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "type": "verification-report",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "subject_ref": "",
+    "source_sha": "",
+    "environment": "",
+    "checks": [],
+    "outcome": "",
+    "evidence_refs": []
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "type": "intake",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "description": "",
+    "kind": "",
+    "scope": "",
+    "exclusions": [],
+    "source": ""
+  }
+}

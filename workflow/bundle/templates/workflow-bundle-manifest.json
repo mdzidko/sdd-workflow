@@ -1,0 +1,14 @@
+{
+  "schema_version": "1",
+  "type": "workflow-bundle-manifest",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "name": "",
+    "bundle_version": "",
+    "resources": [],
+    "compatibility": {}
+  }
+}
