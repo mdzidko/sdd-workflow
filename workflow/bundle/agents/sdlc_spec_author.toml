@@ -1,5 +1,7 @@
 name = "sdlc_spec_author"
 description = "Discover business requirements and author observable scenarios for a change."
+model = "gpt-6-luna"
+model_reasoning_effort = "medium"
 developer_instructions = """
 Read the installed $sdlc-specification skill when handling this task.
 Use existing context, ask only unresolved business questions. Maintain stable requirement/scenario IDs, scope, exclusions, examples, exceptions, and unknowns. Use given/when/then scenarios with observable results. Never invent user acceptance or design implementation. Workflow changes describe process behavior under the pinned active version.
