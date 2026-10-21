@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "type": "capability-report",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "host": "",
+    "version": "",
+    "capabilities": [],
+    "checks": [],
+    "limitations": [],
+    "handoff_evidence": ""
+  }
+}

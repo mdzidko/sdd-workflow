@@ -1,0 +1,12 @@
+{
+  "schema_version": "1",
+  "type": "scenario-test-map",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "mappings": [],
+    "uncovered": []
+  }
+}

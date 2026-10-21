@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sdlc Review"
+  short_description: "Operation-backed SDLC specialist workflow"
+  default_prompt: "Use $sdlc-review for the assigned workflow task."

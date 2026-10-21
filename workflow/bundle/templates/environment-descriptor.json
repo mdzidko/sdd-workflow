@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "type": "environment-descriptor",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "name": "",
+    "kind": "",
+    "applications": [],
+    "configuration_ref": "",
+    "credential_refs": [],
+    "isolation": "",
+    "cleanup": ""
+  }
+}

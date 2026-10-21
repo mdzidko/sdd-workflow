@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "type": "test-standards",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "naming": "",
+    "structure": "",
+    "fixtures": "",
+    "assertions": "",
+    "helpers": "",
+    "automation": [],
+    "review_criteria": []
+  }
+}

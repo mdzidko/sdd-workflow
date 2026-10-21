@@ -1,0 +1,2850 @@
+{
+  "schema_version": "1",
+  "types": {
+    "product-charter": {
+      "description": "Product purpose and measurable outcomes",
+      "generated": false,
+      "required": [
+        "problem",
+        "users",
+        "goals",
+        "success_measures",
+        "assumptions"
+      ],
+      "fields": {
+        "problem": {
+          "type": "string"
+        },
+        "users": {
+          "type": "array",
+          "items": {}
+        },
+        "goals": {
+          "type": "array",
+          "items": {}
+        },
+        "success_measures": {
+          "type": "array",
+          "items": {}
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "problem",
+        "users",
+        "goals",
+        "success_measures",
+        "assumptions"
+      ],
+      "core_required": [
+        "problem",
+        "users",
+        "goals",
+        "success_measures",
+        "assumptions"
+      ]
+    },
+    "mvp-map": {
+      "description": "MVP boundary and delivery order",
+      "generated": false,
+      "required": [
+        "capabilities",
+        "priorities",
+        "dependencies",
+        "exclusions",
+        "completion_criteria"
+      ],
+      "fields": {
+        "capabilities": {
+          "type": "array",
+          "items": {}
+        },
+        "priorities": {
+          "type": "array",
+          "items": {}
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {}
+        },
+        "exclusions": {
+          "type": "array",
+          "items": {}
+        },
+        "completion_criteria": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "capabilities",
+        "priorities",
+        "dependencies",
+        "exclusions",
+        "completion_criteria"
+      ],
+      "core_required": [
+        "capabilities",
+        "priorities",
+        "dependencies",
+        "exclusions",
+        "completion_criteria"
+      ]
+    },
+    "constraints": {
+      "description": "Cross-cutting quality and environment constraints",
+      "generated": false,
+      "required": [
+        "requirements",
+        "limitations",
+        "unresolved_questions"
+      ],
+      "fields": {
+        "requirements": {
+          "type": "array",
+          "items": {}
+        },
+        "limitations": {
+          "type": "array",
+          "items": {}
+        },
+        "unresolved_questions": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "requirements",
+        "limitations",
+        "unresolved_questions"
+      ],
+      "core_required": [
+        "requirements",
+        "limitations",
+        "unresolved_questions"
+      ]
+    },
+    "architecture": {
+      "description": "Approved system boundaries and layout",
+      "generated": false,
+      "required": [
+        "context",
+        "components",
+        "applications",
+        "dependencies",
+        "data_ownership",
+        "application_layout",
+        "rationale",
+        "decisions"
+      ],
+      "fields": {
+        "context": {
+          "type": "string"
+        },
+        "components": {
+          "type": "array",
+          "items": {}
+        },
+        "applications": {
+          "type": "array",
+          "items": {}
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {}
+        },
+        "data_ownership": {
+          "type": "array",
+          "items": {}
+        },
+        "application_layout": {
+          "type": "object"
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "decisions": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "context",
+        "components",
+        "applications",
+        "dependencies",
+        "data_ownership",
+        "application_layout",
+        "rationale",
+        "decisions"
+      ],
+      "core_required": [
+        "context",
+        "components",
+        "applications",
+        "dependencies",
+        "data_ownership",
+        "application_layout",
+        "rationale",
+        "decisions"
+      ]
+    },
+    "implementation-standards": {
+      "description": "Concrete implementation rules and enforcement",
+      "generated": false,
+      "required": [
+        "rules",
+        "examples",
+        "automated_checks",
+        "exceptions"
+      ],
+      "fields": {
+        "rules": {
+          "type": "array",
+          "items": {}
+        },
+        "examples": {
+          "type": "array",
+          "items": {}
+        },
+        "automated_checks": {
+          "type": "array",
+          "items": {}
+        },
+        "exceptions": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "rules",
+        "examples",
+        "automated_checks",
+        "exceptions"
+      ],
+      "core_required": [
+        "rules",
+        "examples",
+        "automated_checks",
+        "exceptions"
+      ]
+    },
+    "test-standards": {
+      "description": "Readable test conventions and verification rules",
+      "generated": false,
+      "required": [
+        "naming",
+        "structure",
+        "fixtures",
+        "assertions",
+        "helpers",
+        "automation",
+        "review_criteria"
+      ],
+      "fields": {
+        "naming": {
+          "type": "string"
+        },
+        "structure": {
+          "type": "string"
+        },
+        "fixtures": {
+          "type": "string"
+        },
+        "assertions": {
+          "type": "string"
+        },
+        "helpers": {
+          "type": "string"
+        },
+        "automation": {
+          "type": "array",
+          "items": {}
+        },
+        "review_criteria": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "naming",
+        "structure",
+        "fixtures",
+        "assertions",
+        "helpers",
+        "automation",
+        "review_criteria"
+      ],
+      "core_required": [
+        "naming",
+        "structure",
+        "fixtures",
+        "assertions",
+        "helpers",
+        "automation",
+        "review_criteria"
+      ]
+    },
+    "adr": {
+      "description": "Architecture decision and its consequences",
+      "generated": false,
+      "required": [
+        "context",
+        "decision",
+        "alternatives",
+        "consequences",
+        "supersedes"
+      ],
+      "fields": {
+        "context": {
+          "type": "string"
+        },
+        "decision": {
+          "type": "string"
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {}
+        },
+        "consequences": {
+          "type": "array",
+          "items": {}
+        },
+        "supersedes": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "context",
+        "decision",
+        "alternatives",
+        "consequences",
+        "supersedes"
+      ],
+      "core_required": [
+        "context",
+        "decision",
+        "alternatives",
+        "consequences",
+        "supersedes"
+      ]
+    },
+    "application-inventory": {
+      "description": "Applications, ownership, and technology bindings",
+      "generated": false,
+      "required": [
+        "applications",
+        "shared_contracts",
+        "compatibility_rules"
+      ],
+      "fields": {
+        "applications": {
+          "type": "array",
+          "items": {}
+        },
+        "shared_contracts": {
+          "type": "array",
+          "items": {}
+        },
+        "compatibility_rules": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "applications",
+        "shared_contracts",
+        "compatibility_rules"
+      ],
+      "core_required": [
+        "applications",
+        "shared_contracts",
+        "compatibility_rules"
+      ]
+    },
+    "contract-inventory": {
+      "description": "Producer and consumer communication contracts",
+      "generated": false,
+      "required": [
+        "contracts",
+        "producers",
+        "consumers",
+        "compatibility_checks"
+      ],
+      "fields": {
+        "contracts": {
+          "type": "array",
+          "items": {}
+        },
+        "producers": {
+          "type": "array",
+          "items": {}
+        },
+        "consumers": {
+          "type": "array",
+          "items": {}
+        },
+        "compatibility_checks": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "contracts",
+        "producers",
+        "consumers",
+        "compatibility_checks"
+      ],
+      "core_required": [
+        "contracts",
+        "producers",
+        "consumers",
+        "compatibility_checks"
+      ]
+    },
+    "delivery-strategy": {
+      "description": "Build, versioning, verification, and recovery strategy",
+      "generated": false,
+      "required": [
+        "builds",
+        "verification",
+        "versioning",
+        "environments",
+        "recovery",
+        "retention"
+      ],
+      "fields": {
+        "builds": {
+          "type": "array",
+          "items": {}
+        },
+        "verification": {
+          "type": "array",
+          "items": {}
+        },
+        "versioning": {
+          "type": "string"
+        },
+        "environments": {
+          "type": "array",
+          "items": {}
+        },
+        "recovery": {
+          "type": "string"
+        },
+        "retention": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "builds",
+        "verification",
+        "versioning",
+        "environments",
+        "recovery",
+        "retention"
+      ],
+      "core_required": [
+        "builds",
+        "verification",
+        "versioning",
+        "environments",
+        "recovery",
+        "retention"
+      ]
+    },
+    "intake": {
+      "description": "Original request and initial classification",
+      "generated": false,
+      "required": [
+        "description",
+        "kind",
+        "scope",
+        "exclusions",
+        "source"
+      ],
+      "fields": {
+        "description": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "exclusions": {
+          "type": "array",
+          "items": {}
+        },
+        "source": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "description",
+        "kind",
+        "scope",
+        "exclusions",
+        "source"
+      ],
+      "core_required": [
+        "description",
+        "kind",
+        "scope",
+        "exclusions",
+        "source"
+      ]
+    },
+    "requirements": {
+      "description": "Business rules and unresolved decisions",
+      "generated": false,
+      "required": [
+        "requirements"
+      ],
+      "fields": {
+        "need": {
+          "type": "string"
+        },
+        "users": {
+          "type": "array",
+          "items": {}
+        },
+        "scope": {
+          "type": "string"
+        },
+        "exclusions": {
+          "type": "array",
+          "items": {}
+        },
+        "requirements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "description"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,100}$"
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            },
+            "additionalProperties": true
+          },
+          "minItems": 1
+        },
+        "examples": {
+          "type": "array",
+          "items": {}
+        },
+        "decisions": {
+          "type": "array",
+          "items": {}
+        },
+        "unknowns": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "need",
+        "users",
+        "scope",
+        "exclusions",
+        "requirements",
+        "examples",
+        "decisions",
+        "unknowns"
+      ],
+      "core_required": [
+        "requirements"
+      ]
+    },
+    "scenarios": {
+      "description": "Observable scenarios linked to requirements",
+      "generated": false,
+      "required": [
+        "scenarios"
+      ],
+      "fields": {
+        "scenarios": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "requirement_ids",
+              "given",
+              "when",
+              "then"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]{0,100}$"
+              },
+              "requirement_ids": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "given": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "when": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              "then": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            },
+            "additionalProperties": true
+          },
+          "minItems": 1
+        },
+        "requirement_coverage": {
+          "type": "array",
+          "items": {}
+        },
+        "decisions": {
+          "type": "array",
+          "items": {}
+        },
+        "unknowns": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "scenarios",
+        "requirement_coverage",
+        "decisions",
+        "unknowns"
+      ],
+      "core_required": [
+        "scenarios"
+      ]
+    },
+    "business-decision": {
+      "description": "A business decision with source provenance",
+      "generated": false,
+      "required": [
+        "question",
+        "decision",
+        "rationale",
+        "source",
+        "subject_revision"
+      ],
+      "fields": {
+        "question": {
+          "type": "string"
+        },
+        "decision": {
+          "type": "string"
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "subject_revision": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "question",
+        "decision",
+        "rationale",
+        "source",
+        "subject_revision"
+      ],
+      "core_required": [
+        "question",
+        "decision",
+        "rationale",
+        "source",
+        "subject_revision"
+      ]
+    },
+    "defect-report": {
+      "description": "Actual versus expected behavior",
+      "generated": false,
+      "required": [
+        "description",
+        "observed",
+        "expected",
+        "affected_versions",
+        "reproduction_steps",
+        "impact",
+        "source"
+      ],
+      "fields": {
+        "description": {
+          "type": "string"
+        },
+        "observed": {
+          "type": "string"
+        },
+        "expected": {
+          "type": "string"
+        },
+        "affected_versions": {
+          "type": "array",
+          "items": {}
+        },
+        "reproduction_steps": {
+          "type": "array",
+          "items": {}
+        },
+        "impact": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "already_fixed_deployment_id": {
+          "type": "string"
+        },
+        "already_fixed_test_id": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "description",
+        "observed",
+        "expected",
+        "affected_versions",
+        "reproduction_steps",
+        "impact",
+        "source"
+      ],
+      "core_required": [
+        "description",
+        "observed",
+        "expected",
+        "affected_versions",
+        "reproduction_steps",
+        "impact",
+        "source"
+      ]
+    },
+    "reproduction-evidence": {
+      "description": "Operation-produced defect reproduction evidence",
+      "generated": true,
+      "required": [
+        "source_sha",
+        "environment",
+        "operation_ids",
+        "observed",
+        "expected",
+        "reproducible"
+      ],
+      "fields": {
+        "source_sha": {
+          "type": "string"
+        },
+        "environment": {
+          "type": "string"
+        },
+        "operation_ids": {
+          "type": "array",
+          "items": {}
+        },
+        "observed": {
+          "type": "string"
+        },
+        "expected": {
+          "type": "string"
+        },
+        "reproducible": {
+          "type": "boolean"
+        }
+      },
+      "stage_required": [
+        "source_sha",
+        "environment",
+        "operation_ids",
+        "observed",
+        "expected",
+        "reproducible"
+      ],
+      "core_required": [
+        "source_sha",
+        "environment",
+        "operation_ids",
+        "observed",
+        "expected",
+        "reproducible"
+      ]
+    },
+    "impact-map": {
+      "description": "Cross-application impact and exclusions",
+      "generated": false,
+      "required": [
+        "applications",
+        "contracts",
+        "data_changes",
+        "exclusions",
+        "compatibility"
+      ],
+      "fields": {
+        "applications": {
+          "type": "array",
+          "items": {}
+        },
+        "contracts": {
+          "type": "array",
+          "items": {}
+        },
+        "data_changes": {
+          "type": "array",
+          "items": {}
+        },
+        "exclusions": {
+          "type": "array",
+          "items": {}
+        },
+        "compatibility": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "applications",
+        "contracts",
+        "data_changes",
+        "exclusions",
+        "compatibility"
+      ],
+      "core_required": [
+        "applications",
+        "contracts",
+        "data_changes",
+        "exclusions",
+        "compatibility"
+      ]
+    },
+    "vertical-increment": {
+      "description": "Small demonstrable behavior spanning required applications",
+      "generated": false,
+      "required": [
+        "behavior",
+        "scenario_ids",
+        "application_ids",
+        "task_ids",
+        "demonstration",
+        "completion_criteria"
+      ],
+      "fields": {
+        "behavior": {
+          "type": "string"
+        },
+        "scenario_ids": {
+          "type": "array",
+          "items": {}
+        },
+        "application_ids": {
+          "type": "array",
+          "items": {}
+        },
+        "task_ids": {
+          "type": "array",
+          "items": {}
+        },
+        "demonstration": {
+          "type": "string"
+        },
+        "completion_criteria": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "behavior",
+        "scenario_ids",
+        "application_ids",
+        "task_ids",
+        "demonstration",
+        "completion_criteria"
+      ],
+      "core_required": [
+        "behavior",
+        "scenario_ids",
+        "application_ids",
+        "task_ids",
+        "demonstration",
+        "completion_criteria"
+      ]
+    },
+    "plan": {
+      "description": "Tasks, dependencies, coverage, and verification schedule",
+      "generated": false,
+      "required": [
+        "tasks"
+      ],
+      "fields": {
+        "outcome": {
+          "type": "string"
+        },
+        "no_file_rationale": {
+          "type": "string"
+        },
+        "specification_ref": {
+          "type": "string"
+        },
+        "increments": {
+          "type": "array",
+          "items": {}
+        },
+        "tasks": {
+          "type": "array",
+          "items": {}
+        },
+        "coverage": {
+          "type": "array",
+          "items": {}
+        },
+        "verification_schedule": {
+          "type": "array",
+          "items": {}
+        },
+        "risks": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "specification_ref",
+        "increments",
+        "tasks",
+        "coverage",
+        "verification_schedule",
+        "risks"
+      ],
+      "core_required": [
+        "tasks"
+      ]
+    },
+    "implementation-plan": {
+      "description": "Tasks, dependencies, coverage, and verification schedule",
+      "generated": false,
+      "required": [
+        "tasks"
+      ],
+      "fields": {
+        "outcome": {
+          "type": "string"
+        },
+        "no_file_rationale": {
+          "type": "string"
+        },
+        "specification_ref": {
+          "type": "string"
+        },
+        "increments": {
+          "type": "array",
+          "items": {}
+        },
+        "tasks": {
+          "type": "array",
+          "items": {}
+        },
+        "coverage": {
+          "type": "array",
+          "items": {}
+        },
+        "verification_schedule": {
+          "type": "array",
+          "items": {}
+        },
+        "risks": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "specification_ref",
+        "increments",
+        "tasks",
+        "coverage",
+        "verification_schedule",
+        "risks"
+      ],
+      "core_required": [
+        "tasks"
+      ]
+    },
+    "task-envelope": {
+      "description": "Bounded specialist assignment",
+      "generated": false,
+      "required": [
+        "role",
+        "goal",
+        "input_refs",
+        "scenario_ids",
+        "ownership",
+        "allowed_operations",
+        "outputs",
+        "dependencies",
+        "completion_criteria",
+        "evidence_requirements",
+        "limits",
+        "escalation_conditions"
+      ],
+      "fields": {
+        "role": {
+          "type": "string"
+        },
+        "goal": {
+          "type": "string"
+        },
+        "input_refs": {
+          "type": "array",
+          "items": {}
+        },
+        "scenario_ids": {
+          "type": "array",
+          "items": {}
+        },
+        "ownership": {
+          "type": "array",
+          "items": {}
+        },
+        "allowed_operations": {
+          "type": "array",
+          "items": {}
+        },
+        "outputs": {
+          "type": "array",
+          "items": {}
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {}
+        },
+        "completion_criteria": {
+          "type": "array",
+          "items": {}
+        },
+        "evidence_requirements": {
+          "type": "array",
+          "items": {}
+        },
+        "limits": {
+          "type": "object"
+        },
+        "escalation_conditions": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "role",
+        "goal",
+        "input_refs",
+        "scenario_ids",
+        "ownership",
+        "allowed_operations",
+        "outputs",
+        "dependencies",
+        "completion_criteria",
+        "evidence_requirements",
+        "limits",
+        "escalation_conditions"
+      ],
+      "core_required": [
+        "role",
+        "goal",
+        "input_refs",
+        "scenario_ids",
+        "ownership",
+        "allowed_operations",
+        "outputs",
+        "dependencies",
+        "completion_criteria",
+        "evidence_requirements",
+        "limits",
+        "escalation_conditions"
+      ]
+    },
+    "dependency-graph": {
+      "description": "Directed acyclic task dependency graph",
+      "generated": false,
+      "required": [
+        "nodes",
+        "edges"
+      ],
+      "fields": {
+        "nodes": {
+          "type": "array",
+          "items": {}
+        },
+        "edges": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "nodes",
+        "edges"
+      ],
+      "core_required": [
+        "nodes",
+        "edges"
+      ]
+    },
+    "scenario-test-map": {
+      "description": "Scenario to task and test traceability",
+      "generated": false,
+      "required": [
+        "mappings",
+        "uncovered"
+      ],
+      "fields": {
+        "mappings": {
+          "type": "array",
+          "items": {}
+        },
+        "uncovered": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "mappings",
+        "uncovered"
+      ],
+      "core_required": [
+        "mappings",
+        "uncovered"
+      ]
+    },
+    "verification-schedule": {
+      "description": "Trigger-based test execution plan",
+      "generated": false,
+      "required": [
+        "checks",
+        "environments",
+        "expected_costs",
+        "impact_expansion_rules"
+      ],
+      "fields": {
+        "checks": {
+          "type": "array",
+          "items": {}
+        },
+        "environments": {
+          "type": "array",
+          "items": {}
+        },
+        "expected_costs": {
+          "type": "array",
+          "items": {}
+        },
+        "impact_expansion_rules": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "checks",
+        "environments",
+        "expected_costs",
+        "impact_expansion_rules"
+      ],
+      "core_required": [
+        "checks",
+        "environments",
+        "expected_costs",
+        "impact_expansion_rules"
+      ]
+    },
+    "risk-record": {
+      "description": "Risk, mitigation, and decision ownership",
+      "generated": false,
+      "required": [
+        "description",
+        "likelihood",
+        "impact",
+        "mitigation",
+        "owner",
+        "status"
+      ],
+      "fields": {
+        "description": {
+          "type": "string"
+        },
+        "likelihood": {
+          "type": "string"
+        },
+        "impact": {
+          "type": "string"
+        },
+        "mitigation": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "description",
+        "likelihood",
+        "impact",
+        "mitigation",
+        "owner",
+        "status"
+      ],
+      "core_required": [
+        "description",
+        "likelihood",
+        "impact",
+        "mitigation",
+        "owner",
+        "status"
+      ]
+    },
+    "agent-result": {
+      "description": "Specialist output, not authoritative completion",
+      "generated": false,
+      "required": [
+        "task_id",
+        "role",
+        "result",
+        "artifacts",
+        "evidence_refs",
+        "problems",
+        "next_action"
+      ],
+      "fields": {
+        "task_id": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        },
+        "result": {
+          "type": "string"
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {}
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {}
+        },
+        "problems": {
+          "type": "array",
+          "items": {}
+        },
+        "next_action": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "task_id",
+        "role",
+        "result",
+        "artifacts",
+        "evidence_refs",
+        "problems",
+        "next_action"
+      ],
+      "core_required": [
+        "task_id",
+        "role",
+        "result",
+        "artifacts",
+        "evidence_refs",
+        "problems",
+        "next_action"
+      ]
+    },
+    "operation-request": {
+      "description": "Versioned operation invocation",
+      "generated": false,
+      "required": [
+        "operation",
+        "operation_version",
+        "request_id",
+        "input",
+        "expected_revision"
+      ],
+      "fields": {
+        "operation": {
+          "type": "string"
+        },
+        "operation_version": {
+          "type": "string"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "input": {
+          "type": "object"
+        },
+        "expected_revision": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "operation",
+        "operation_version",
+        "request_id",
+        "input",
+        "expected_revision"
+      ],
+      "core_required": [
+        "operation",
+        "operation_version",
+        "request_id",
+        "input",
+        "expected_revision"
+      ]
+    },
+    "operation-result": {
+      "description": "Operation-generated execution receipt",
+      "generated": true,
+      "required": [
+        "operation",
+        "request_id",
+        "outcome",
+        "source_sha",
+        "evidence",
+        "effects",
+        "errors"
+      ],
+      "fields": {
+        "operation": {
+          "type": "string"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "outcome": {
+          "type": "string"
+        },
+        "source_sha": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {}
+        },
+        "effects": {
+          "type": "array",
+          "items": {}
+        },
+        "errors": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "operation",
+        "request_id",
+        "outcome",
+        "source_sha",
+        "evidence",
+        "effects",
+        "errors"
+      ],
+      "core_required": [
+        "operation",
+        "request_id",
+        "outcome",
+        "source_sha",
+        "evidence",
+        "effects",
+        "errors"
+      ]
+    },
+    "task-checkpoint": {
+      "description": "Operation-generated commit and push checkpoint",
+      "generated": true,
+      "required": [
+        "task_id",
+        "source_sha",
+        "commit_sha",
+        "branch",
+        "paths",
+        "push_status",
+        "receipt_ids"
+      ],
+      "fields": {
+        "task_id": {
+          "type": "string"
+        },
+        "source_sha": {
+          "type": "string"
+        },
+        "commit_sha": {
+          "type": "string"
+        },
+        "branch": {
+          "type": "string"
+        },
+        "paths": {
+          "type": "array",
+          "items": {}
+        },
+        "push_status": {
+          "type": "string"
+        },
+        "receipt_ids": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "task_id",
+        "source_sha",
+        "commit_sha",
+        "branch",
+        "paths",
+        "push_status",
+        "receipt_ids"
+      ],
+      "core_required": [
+        "task_id",
+        "source_sha",
+        "commit_sha",
+        "branch",
+        "paths",
+        "push_status",
+        "receipt_ids"
+      ]
+    },
+    "tdd-evidence": {
+      "description": "Operation-produced behavioral RED or GREEN evidence",
+      "generated": true,
+      "required": [
+        "task_id",
+        "phase",
+        "source_sha",
+        "test_ids",
+        "run_id",
+        "classification"
+      ],
+      "fields": {
+        "task_id": {
+          "type": "string"
+        },
+        "phase": {
+          "type": "string"
+        },
+        "source_sha": {
+          "type": "string"
+        },
+        "test_ids": {
+          "type": "array",
+          "items": {}
+        },
+        "run_id": {
+          "type": "string"
+        },
+        "classification": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "task_id",
+        "phase",
+        "source_sha",
+        "test_ids",
+        "run_id",
+        "classification"
+      ],
+      "core_required": [
+        "task_id",
+        "phase",
+        "source_sha",
+        "test_ids",
+        "run_id",
+        "classification"
+      ]
+    },
+    "environment-descriptor": {
+      "description": "Environment inventory without secret values",
+      "generated": false,
+      "required": [
+        "name",
+        "kind",
+        "applications",
+        "configuration_ref",
+        "credential_refs",
+        "isolation",
+        "cleanup"
+      ],
+      "fields": {
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "applications": {
+          "type": "array",
+          "items": {}
+        },
+        "configuration_ref": {
+          "type": "string"
+        },
+        "credential_refs": {
+          "type": "array",
+          "items": {}
+        },
+        "isolation": {
+          "type": "string"
+        },
+        "cleanup": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "name",
+        "kind",
+        "applications",
+        "configuration_ref",
+        "credential_refs",
+        "isolation",
+        "cleanup"
+      ],
+      "core_required": [
+        "name",
+        "kind",
+        "applications",
+        "configuration_ref",
+        "credential_refs",
+        "isolation",
+        "cleanup"
+      ]
+    },
+    "review-finding": {
+      "description": "Actionable review observation",
+      "generated": false,
+      "required": [
+        "review_id",
+        "severity",
+        "subject",
+        "location",
+        "description",
+        "expected",
+        "correction"
+      ],
+      "fields": {
+        "review_id": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "expected": {
+          "type": "string"
+        },
+        "correction": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "review_id",
+        "severity",
+        "subject",
+        "location",
+        "description",
+        "expected",
+        "correction"
+      ],
+      "core_required": [
+        "review_id",
+        "severity",
+        "subject",
+        "location",
+        "description",
+        "expected",
+        "correction"
+      ]
+    },
+    "review-resolution": {
+      "description": "Finding response and verification",
+      "generated": false,
+      "required": [
+        "finding_id",
+        "response",
+        "changes",
+        "evidence_refs",
+        "disposition"
+      ],
+      "fields": {
+        "finding_id": {
+          "type": "string"
+        },
+        "response": {
+          "type": "string"
+        },
+        "changes": {
+          "type": "array",
+          "items": {}
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {}
+        },
+        "disposition": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "finding_id",
+        "response",
+        "changes",
+        "evidence_refs",
+        "disposition"
+      ],
+      "core_required": [
+        "finding_id",
+        "response",
+        "changes",
+        "evidence_refs",
+        "disposition"
+      ]
+    },
+    "review-report": {
+      "description": "Independent semantic assessment",
+      "generated": false,
+      "required": [
+        "subject_refs",
+        "reviewer_identity",
+        "author_identity",
+        "outcome",
+        "findings",
+        "evidence_refs"
+      ],
+      "fields": {
+        "subject_refs": {
+          "type": "array",
+          "items": {}
+        },
+        "reviewer_identity": {
+          "type": "string"
+        },
+        "author_identity": {
+          "type": "string"
+        },
+        "outcome": {
+          "type": "string"
+        },
+        "findings": {
+          "type": "array",
+          "items": {}
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "subject_refs",
+        "reviewer_identity",
+        "author_identity",
+        "outcome",
+        "findings",
+        "evidence_refs"
+      ],
+      "core_required": [
+        "subject_refs",
+        "reviewer_identity",
+        "author_identity",
+        "outcome",
+        "findings",
+        "evidence_refs"
+      ]
+    },
+    "human-decision": {
+      "description": "Authenticated decision receipt; never agent-issued",
+      "generated": true,
+      "required": [
+        "decision",
+        "subject_ref",
+        "subject_revision",
+        "actor",
+        "source",
+        "evidence_ref"
+      ],
+      "fields": {
+        "decision": {
+          "type": "string"
+        },
+        "subject_ref": {
+          "type": "string"
+        },
+        "subject_revision": {
+          "type": "string"
+        },
+        "actor": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "evidence_ref": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "decision",
+        "subject_ref",
+        "subject_revision",
+        "actor",
+        "source",
+        "evidence_ref"
+      ],
+      "core_required": [
+        "decision",
+        "subject_ref",
+        "subject_revision",
+        "actor",
+        "source",
+        "evidence_ref"
+      ]
+    },
+    "escalation": {
+      "description": "Bounded loop exhaustion or missing decision",
+      "generated": false,
+      "required": [
+        "reason",
+        "attempts",
+        "evidence_refs",
+        "options",
+        "recommendation",
+        "decision_needed"
+      ],
+      "fields": {
+        "reason": {
+          "type": "string"
+        },
+        "attempts": {
+          "type": "array",
+          "items": {}
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {}
+        },
+        "options": {
+          "type": "array",
+          "items": {}
+        },
+        "recommendation": {
+          "type": "string"
+        },
+        "decision_needed": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "reason",
+        "attempts",
+        "evidence_refs",
+        "options",
+        "recommendation",
+        "decision_needed"
+      ],
+      "core_required": [
+        "reason",
+        "attempts",
+        "evidence_refs",
+        "options",
+        "recommendation",
+        "decision_needed"
+      ]
+    },
+    "branch-identity": {
+      "description": "Operation-generated change branch identity",
+      "generated": true,
+      "required": [
+        "branch",
+        "base_branch",
+        "base_sha",
+        "change_kind"
+      ],
+      "fields": {
+        "branch": {
+          "type": "string"
+        },
+        "base_branch": {
+          "type": "string"
+        },
+        "base_sha": {
+          "type": "string"
+        },
+        "change_kind": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "branch",
+        "base_branch",
+        "base_sha",
+        "change_kind"
+      ],
+      "core_required": [
+        "branch",
+        "base_branch",
+        "base_sha",
+        "change_kind"
+      ]
+    },
+    "commit-metadata": {
+      "description": "Operation-generated scoped commit metadata",
+      "generated": true,
+      "required": [
+        "task_id",
+        "commit_sha",
+        "parent_sha",
+        "paths",
+        "message"
+      ],
+      "fields": {
+        "task_id": {
+          "type": "string"
+        },
+        "commit_sha": {
+          "type": "string"
+        },
+        "parent_sha": {
+          "type": "string"
+        },
+        "paths": {
+          "type": "array",
+          "items": {}
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "task_id",
+        "commit_sha",
+        "parent_sha",
+        "paths",
+        "message"
+      ],
+      "core_required": [
+        "task_id",
+        "commit_sha",
+        "parent_sha",
+        "paths",
+        "message"
+      ]
+    },
+    "pull-request": {
+      "description": "Draft or ready PR content",
+      "generated": false,
+      "required": [
+        "summary",
+        "scope",
+        "scenario_refs",
+        "changes",
+        "verification",
+        "demonstration",
+        "limitations",
+        "deployment_notes"
+      ],
+      "fields": {
+        "summary": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "scenario_refs": {
+          "type": "array",
+          "items": {}
+        },
+        "changes": {
+          "type": "array",
+          "items": {}
+        },
+        "verification": {
+          "type": "array",
+          "items": {}
+        },
+        "demonstration": {
+          "type": "string"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {}
+        },
+        "deployment_notes": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "summary",
+        "scope",
+        "scenario_refs",
+        "changes",
+        "verification",
+        "demonstration",
+        "limitations",
+        "deployment_notes"
+      ],
+      "core_required": [
+        "summary",
+        "scope",
+        "scenario_refs",
+        "changes",
+        "verification",
+        "demonstration",
+        "limitations",
+        "deployment_notes"
+      ]
+    },
+    "merge-receipt": {
+      "description": "Authenticated squash merge outcome",
+      "generated": true,
+      "required": [
+        "pr_url",
+        "source_sha",
+        "merge_sha",
+        "base_branch",
+        "approval_refs",
+        "check_refs"
+      ],
+      "fields": {
+        "pr_url": {
+          "type": "string"
+        },
+        "source_sha": {
+          "type": "string"
+        },
+        "merge_sha": {
+          "type": "string"
+        },
+        "base_branch": {
+          "type": "string"
+        },
+        "approval_refs": {
+          "type": "array",
+          "items": {}
+        },
+        "check_refs": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "pr_url",
+        "source_sha",
+        "merge_sha",
+        "base_branch",
+        "approval_refs",
+        "check_refs"
+      ],
+      "core_required": [
+        "pr_url",
+        "source_sha",
+        "merge_sha",
+        "base_branch",
+        "approval_refs",
+        "check_refs"
+      ]
+    },
+    "cleanup-receipt": {
+      "description": "Confirmed branch cleanup outcome",
+      "generated": true,
+      "required": [
+        "branch",
+        "merge_sha",
+        "local_status",
+        "remote_status",
+        "preserved_work"
+      ],
+      "fields": {
+        "branch": {
+          "type": "string"
+        },
+        "merge_sha": {
+          "type": "string"
+        },
+        "local_status": {
+          "type": "string"
+        },
+        "remote_status": {
+          "type": "string"
+        },
+        "preserved_work": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "branch",
+        "merge_sha",
+        "local_status",
+        "remote_status",
+        "preserved_work"
+      ],
+      "core_required": [
+        "branch",
+        "merge_sha",
+        "local_status",
+        "remote_status",
+        "preserved_work"
+      ]
+    },
+    "build-record": {
+      "description": "Source-bound application artifact build",
+      "generated": true,
+      "required": [
+        "source_sha",
+        "application_id",
+        "artifact_ref",
+        "digest",
+        "build_run",
+        "verification_refs"
+      ],
+      "fields": {
+        "source_sha": {
+          "type": "string"
+        },
+        "application_id": {
+          "type": "string"
+        },
+        "artifact_ref": {
+          "type": "string"
+        },
+        "digest": {
+          "type": "string"
+        },
+        "build_run": {
+          "type": "string"
+        },
+        "verification_refs": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "source_sha",
+        "application_id",
+        "artifact_ref",
+        "digest",
+        "build_run",
+        "verification_refs"
+      ],
+      "core_required": [
+        "source_sha",
+        "application_id",
+        "artifact_ref",
+        "digest",
+        "build_run",
+        "verification_refs"
+      ]
+    },
+    "candidate-manifest": {
+      "description": "Built artifact set awaiting verification",
+      "generated": false,
+      "required": [
+        "source_revisions",
+        "applications",
+        "configuration_ref",
+        "migrations",
+        "compatibility",
+        "evidence_refs"
+      ],
+      "fields": {
+        "source_revisions": {
+          "type": "array",
+          "items": {}
+        },
+        "applications": {
+          "type": "array",
+          "items": {}
+        },
+        "configuration_ref": {
+          "type": "string"
+        },
+        "migrations": {
+          "type": "array",
+          "items": {}
+        },
+        "compatibility": {
+          "type": "array",
+          "items": {}
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "source_revisions",
+        "applications",
+        "configuration_ref",
+        "migrations",
+        "compatibility",
+        "evidence_refs"
+      ],
+      "core_required": [
+        "source_revisions",
+        "applications",
+        "configuration_ref",
+        "migrations",
+        "compatibility",
+        "evidence_refs"
+      ]
+    },
+    "verification-report": {
+      "description": "Operation-generated system or artifact verification",
+      "generated": true,
+      "required": [
+        "subject_ref",
+        "source_sha",
+        "environment",
+        "checks",
+        "outcome",
+        "evidence_refs"
+      ],
+      "fields": {
+        "subject_ref": {
+          "type": "string"
+        },
+        "source_sha": {
+          "type": "string"
+        },
+        "environment": {
+          "type": "string"
+        },
+        "checks": {
+          "type": "array",
+          "items": {}
+        },
+        "outcome": {
+          "type": "string"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "subject_ref",
+        "source_sha",
+        "environment",
+        "checks",
+        "outcome",
+        "evidence_refs"
+      ],
+      "core_required": [
+        "subject_ref",
+        "source_sha",
+        "environment",
+        "checks",
+        "outcome",
+        "evidence_refs"
+      ]
+    },
+    "release-manifest": {
+      "description": "Compatible verified artifact set",
+      "generated": false,
+      "required": [
+        "version",
+        "source_revisions",
+        "applications",
+        "configuration_ref",
+        "migrations",
+        "compatibility",
+        "verification_refs",
+        "recovery"
+      ],
+      "fields": {
+        "version": {
+          "type": "string"
+        },
+        "source_revisions": {
+          "type": "array",
+          "items": {}
+        },
+        "applications": {
+          "type": "array",
+          "items": {}
+        },
+        "configuration_ref": {
+          "type": "string"
+        },
+        "migrations": {
+          "type": "array",
+          "items": {}
+        },
+        "compatibility": {
+          "type": "array",
+          "items": {}
+        },
+        "verification_refs": {
+          "type": "array",
+          "items": {}
+        },
+        "recovery": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "version",
+        "source_revisions",
+        "applications",
+        "configuration_ref",
+        "migrations",
+        "compatibility",
+        "verification_refs",
+        "recovery"
+      ],
+      "core_required": [
+        "version",
+        "source_revisions",
+        "applications",
+        "configuration_ref",
+        "migrations",
+        "compatibility",
+        "verification_refs",
+        "recovery"
+      ]
+    },
+    "release-notes": {
+      "description": "User-visible changes and operational notes",
+      "generated": false,
+      "required": [
+        "version",
+        "features",
+        "fixes",
+        "limitations",
+        "migrations",
+        "compatibility"
+      ],
+      "fields": {
+        "version": {
+          "type": "string"
+        },
+        "features": {
+          "type": "array",
+          "items": {}
+        },
+        "fixes": {
+          "type": "array",
+          "items": {}
+        },
+        "limitations": {
+          "type": "array",
+          "items": {}
+        },
+        "migrations": {
+          "type": "array",
+          "items": {}
+        },
+        "compatibility": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "version",
+        "features",
+        "fixes",
+        "limitations",
+        "migrations",
+        "compatibility"
+      ],
+      "core_required": [
+        "version",
+        "features",
+        "fixes",
+        "limitations",
+        "migrations",
+        "compatibility"
+      ]
+    },
+    "deployment-report": {
+      "description": "Actual deployment and behavioral verification",
+      "generated": true,
+      "required": [
+        "environment",
+        "release_ref",
+        "previous_release_ref",
+        "outcome",
+        "deployed_artifacts",
+        "migrations",
+        "verification_refs"
+      ],
+      "fields": {
+        "environment": {
+          "type": "string"
+        },
+        "release_ref": {
+          "type": "string"
+        },
+        "previous_release_ref": {
+          "type": "string"
+        },
+        "outcome": {
+          "type": "string"
+        },
+        "deployed_artifacts": {
+          "type": "array",
+          "items": {}
+        },
+        "migrations": {
+          "type": "array",
+          "items": {}
+        },
+        "verification_refs": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "environment",
+        "release_ref",
+        "previous_release_ref",
+        "outcome",
+        "deployed_artifacts",
+        "migrations",
+        "verification_refs"
+      ],
+      "core_required": [
+        "environment",
+        "release_ref",
+        "previous_release_ref",
+        "outcome",
+        "deployed_artifacts",
+        "migrations",
+        "verification_refs"
+      ]
+    },
+    "recovery-report": {
+      "description": "Recovery action and data compatibility outcome",
+      "generated": true,
+      "required": [
+        "environment",
+        "failed_deployment_ref",
+        "target_release_ref",
+        "data_compatibility",
+        "actions",
+        "outcome",
+        "verification_refs"
+      ],
+      "fields": {
+        "environment": {
+          "type": "string"
+        },
+        "failed_deployment_ref": {
+          "type": "string"
+        },
+        "target_release_ref": {
+          "type": "string"
+        },
+        "data_compatibility": {
+          "type": "string"
+        },
+        "actions": {
+          "type": "array",
+          "items": {}
+        },
+        "outcome": {
+          "type": "string"
+        },
+        "verification_refs": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "environment",
+        "failed_deployment_ref",
+        "target_release_ref",
+        "data_compatibility",
+        "actions",
+        "outcome",
+        "verification_refs"
+      ],
+      "core_required": [
+        "environment",
+        "failed_deployment_ref",
+        "target_release_ref",
+        "data_compatibility",
+        "actions",
+        "outcome",
+        "verification_refs"
+      ]
+    },
+    "workflow-bundle-manifest": {
+      "description": "Versioned distributable workflow inventory",
+      "generated": false,
+      "required": [
+        "name",
+        "bundle_version",
+        "resources",
+        "compatibility"
+      ],
+      "fields": {
+        "name": {
+          "type": "string"
+        },
+        "bundle_version": {
+          "type": "string"
+        },
+        "resources": {
+          "type": "array",
+          "items": {}
+        },
+        "compatibility": {
+          "type": "object"
+        }
+      },
+      "stage_required": [
+        "name",
+        "bundle_version",
+        "resources",
+        "compatibility"
+      ],
+      "core_required": [
+        "name",
+        "bundle_version",
+        "resources",
+        "compatibility"
+      ]
+    },
+    "activation-record": {
+      "description": "Explicit activation of a verified workflow version",
+      "generated": true,
+      "required": [
+        "previous_version",
+        "candidate_version",
+        "approval_ref",
+        "verification_refs",
+        "activated_at"
+      ],
+      "fields": {
+        "previous_version": {
+          "type": "string"
+        },
+        "candidate_version": {
+          "type": "string"
+        },
+        "approval_ref": {
+          "type": "string"
+        },
+        "verification_refs": {
+          "type": "array",
+          "items": {}
+        },
+        "activated_at": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "previous_version",
+        "candidate_version",
+        "approval_ref",
+        "verification_refs",
+        "activated_at"
+      ],
+      "core_required": [
+        "previous_version",
+        "candidate_version",
+        "approval_ref",
+        "verification_refs",
+        "activated_at"
+      ]
+    },
+    "state-migration-plan": {
+      "description": "Explicit in-flight state migration plan",
+      "generated": false,
+      "required": [
+        "source_version",
+        "target_version",
+        "affected_changes",
+        "transformations",
+        "verification",
+        "recovery",
+        "approval_ref"
+      ],
+      "fields": {
+        "source_version": {
+          "type": "string"
+        },
+        "target_version": {
+          "type": "string"
+        },
+        "affected_changes": {
+          "type": "array",
+          "items": {}
+        },
+        "transformations": {
+          "type": "array",
+          "items": {}
+        },
+        "verification": {
+          "type": "array",
+          "items": {}
+        },
+        "recovery": {
+          "type": "string"
+        },
+        "approval_ref": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "source_version",
+        "target_version",
+        "affected_changes",
+        "transformations",
+        "verification",
+        "recovery",
+        "approval_ref"
+      ],
+      "core_required": [
+        "source_version",
+        "target_version",
+        "affected_changes",
+        "transformations",
+        "verification",
+        "recovery",
+        "approval_ref"
+      ]
+    },
+    "state-migration-result": {
+      "description": "Verified state migration outcome",
+      "generated": true,
+      "required": [
+        "plan_ref",
+        "outcome",
+        "migrated_changes",
+        "verification_refs",
+        "recovery_status"
+      ],
+      "fields": {
+        "plan_ref": {
+          "type": "string"
+        },
+        "outcome": {
+          "type": "string"
+        },
+        "migrated_changes": {
+          "type": "array",
+          "items": {}
+        },
+        "verification_refs": {
+          "type": "array",
+          "items": {}
+        },
+        "recovery_status": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "plan_ref",
+        "outcome",
+        "migrated_changes",
+        "verification_refs",
+        "recovery_status"
+      ],
+      "core_required": [
+        "plan_ref",
+        "outcome",
+        "migrated_changes",
+        "verification_refs",
+        "recovery_status"
+      ]
+    },
+    "evaluation-report": {
+      "description": "Workflow regression and quality comparison",
+      "generated": false,
+      "required": [
+        "baseline_version",
+        "candidate_version",
+        "scenarios",
+        "correctness",
+        "interventions",
+        "duration",
+        "cost",
+        "limitations"
+      ],
+      "fields": {
+        "baseline_version": {
+          "type": "string"
+        },
+        "candidate_version": {
+          "type": "string"
+        },
+        "scenarios": {
+          "type": "array",
+          "items": {}
+        },
+        "correctness": {
+          "type": "object"
+        },
+        "interventions": {
+          "type": "object"
+        },
+        "duration": {
+          "type": "object"
+        },
+        "cost": {
+          "type": "object"
+        },
+        "limitations": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "baseline_version",
+        "candidate_version",
+        "scenarios",
+        "correctness",
+        "interventions",
+        "duration",
+        "cost",
+        "limitations"
+      ],
+      "core_required": [
+        "baseline_version",
+        "candidate_version",
+        "scenarios",
+        "correctness",
+        "interventions",
+        "duration",
+        "cost",
+        "limitations"
+      ]
+    },
+    "capability-report": {
+      "description": "Observed host capabilities and actual handoff evidence",
+      "generated": true,
+      "required": [
+        "host",
+        "version",
+        "capabilities",
+        "checks",
+        "limitations",
+        "handoff_evidence"
+      ],
+      "fields": {
+        "host": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {}
+        },
+        "checks": {
+          "type": "array",
+          "items": {}
+        },
+        "limitations": {
+          "type": "array",
+          "items": {}
+        },
+        "handoff_evidence": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "host",
+        "version",
+        "capabilities",
+        "checks",
+        "limitations",
+        "handoff_evidence"
+      ],
+      "core_required": [
+        "host",
+        "version",
+        "capabilities",
+        "checks",
+        "limitations",
+        "handoff_evidence"
+      ]
+    },
+    "credential-references": {
+      "description": "Credential names and intended access; no secrets",
+      "generated": false,
+      "required": [
+        "references",
+        "required_scopes",
+        "ownership"
+      ],
+      "fields": {
+        "references": {
+          "type": "array",
+          "items": {}
+        },
+        "required_scopes": {
+          "type": "array",
+          "items": {}
+        },
+        "ownership": {
+          "type": "string"
+        }
+      },
+      "stage_required": [
+        "references",
+        "required_scopes",
+        "ownership"
+      ],
+      "core_required": [
+        "references",
+        "required_scopes",
+        "ownership"
+      ]
+    },
+    "capability-index": {
+      "description": "Accurate delivered capability summary",
+      "generated": false,
+      "required": [
+        "capabilities",
+        "architecture_refs",
+        "limitations",
+        "release_refs"
+      ],
+      "fields": {
+        "capabilities": {
+          "type": "array",
+          "items": {}
+        },
+        "architecture_refs": {
+          "type": "array",
+          "items": {}
+        },
+        "limitations": {
+          "type": "array",
+          "items": {}
+        },
+        "release_refs": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "capabilities",
+        "architecture_refs",
+        "limitations",
+        "release_refs"
+      ],
+      "core_required": [
+        "capabilities",
+        "architecture_refs",
+        "limitations",
+        "release_refs"
+      ]
+    },
+    "context-package": {
+      "description": "Small source-pinned task context",
+      "generated": false,
+      "required": [
+        "request",
+        "base_sha",
+        "approved_intent",
+        "implemented_behavior",
+        "planned_capabilities",
+        "sources",
+        "constraints",
+        "unknowns"
+      ],
+      "fields": {
+        "request": {
+          "type": "string"
+        },
+        "base_sha": {
+          "type": "string"
+        },
+        "approved_intent": {
+          "type": "array",
+          "items": {}
+        },
+        "implemented_behavior": {
+          "type": "array",
+          "items": {}
+        },
+        "planned_capabilities": {
+          "type": "array",
+          "items": {}
+        },
+        "sources": {
+          "type": "array",
+          "items": {}
+        },
+        "constraints": {
+          "type": "array",
+          "items": {}
+        },
+        "unknowns": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "stage_required": [
+        "request",
+        "base_sha",
+        "approved_intent",
+        "implemented_behavior",
+        "planned_capabilities",
+        "sources",
+        "constraints",
+        "unknowns"
+      ],
+      "core_required": [
+        "request",
+        "base_sha",
+        "approved_intent",
+        "implemented_behavior",
+        "planned_capabilities",
+        "sources",
+        "constraints",
+        "unknowns"
+      ]
+    }
+  }
+}

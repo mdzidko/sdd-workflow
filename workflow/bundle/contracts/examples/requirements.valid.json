@@ -1,0 +1,23 @@
+{
+  "schema_version": "1",
+  "type": "requirements",
+  "id": "EXAMPLE-001",
+  "change_id": "EXAMPLE",
+  "title": "Synthetic format example; not execution evidence",
+  "status": "draft",
+  "data": {
+    "need": "Example value",
+    "users": [],
+    "scope": "Example value",
+    "exclusions": [],
+    "requirements": [
+      {
+        "id": "REQ-001",
+        "description": "A valid request is retained."
+      }
+    ],
+    "examples": [],
+    "decisions": [],
+    "unknowns": []
+  }
+}

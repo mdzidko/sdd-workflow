@@ -1,0 +1,14 @@
+{
+  "schema_version": "1",
+  "type": "verification-schedule",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "checks": [],
+    "environments": [],
+    "expected_costs": [],
+    "impact_expansion_rules": []
+  }
+}

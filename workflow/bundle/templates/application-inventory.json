@@ -1,0 +1,13 @@
+{
+  "schema_version": "1",
+  "type": "application-inventory",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "applications": [],
+    "shared_contracts": [],
+    "compatibility_rules": []
+  }
+}

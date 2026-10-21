@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "type": "commit-metadata",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "task_id": "",
+    "commit_sha": "",
+    "parent_sha": "",
+    "paths": [],
+    "message": ""
+  }
+}

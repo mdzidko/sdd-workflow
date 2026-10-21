@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "type": "evaluation-report",
+  "id": "EXAMPLE-001",
+  "change_id": "EXAMPLE",
+  "title": "Synthetic format example; not execution evidence",
+  "status": "draft",
+  "data": {
+    "candidate_version": "Example value",
+    "scenarios": [],
+    "correctness": {},
+    "interventions": {},
+    "duration": {},
+    "cost": {},
+    "limitations": []
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schema_version": "1",
+  "type": "implementation-standards",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "rules": [],
+    "examples": [],
+    "automated_checks": [],
+    "exceptions": []
+  }
+}

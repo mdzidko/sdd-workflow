@@ -1,0 +1,138 @@
+{
+  "schema_version": "1",
+  "bundle_version": "0.1.28",
+  "name": "codex-sdlc-workflow",
+  "entry_skill": "sdlc-workflow",
+  "resources": [
+    {
+      "source": "skills/sdlc-delivery",
+      "destination": ".agents/skills/sdlc-delivery",
+      "kind": "directory"
+    },
+    {
+      "source": "skills/sdlc-documentation",
+      "destination": ".agents/skills/sdlc-documentation",
+      "kind": "directory"
+    },
+    {
+      "source": "skills/sdlc-foundations",
+      "destination": ".agents/skills/sdlc-foundations",
+      "kind": "directory"
+    },
+    {
+      "source": "skills/sdlc-implementation",
+      "destination": ".agents/skills/sdlc-implementation",
+      "kind": "directory"
+    },
+    {
+      "source": "skills/sdlc-planning",
+      "destination": ".agents/skills/sdlc-planning",
+      "kind": "directory"
+    },
+    {
+      "source": "skills/sdlc-review",
+      "destination": ".agents/skills/sdlc-review",
+      "kind": "directory"
+    },
+    {
+      "source": "skills/sdlc-specification",
+      "destination": ".agents/skills/sdlc-specification",
+      "kind": "directory"
+    },
+    {
+      "source": "skills/sdlc-testing",
+      "destination": ".agents/skills/sdlc-testing",
+      "kind": "directory"
+    },
+    {
+      "source": "skills/sdlc-workflow",
+      "destination": ".agents/skills/sdlc-workflow",
+      "kind": "directory"
+    },
+    {
+      "source": "agents/sdlc_architect.toml",
+      "destination": ".codex/agents/sdlc_architect.toml",
+      "kind": "file"
+    },
+    {
+      "source": "agents/sdlc_documentation_author.toml",
+      "destination": ".codex/agents/sdlc_documentation_author.toml",
+      "kind": "file"
+    },
+    {
+      "source": "agents/sdlc_implementation_reviewer.toml",
+      "destination": ".codex/agents/sdlc_implementation_reviewer.toml",
+      "kind": "file"
+    },
+    {
+      "source": "agents/sdlc_implementer.toml",
+      "destination": ".codex/agents/sdlc_implementer.toml",
+      "kind": "file"
+    },
+    {
+      "source": "agents/sdlc_plan_reviewer.toml",
+      "destination": ".codex/agents/sdlc_plan_reviewer.toml",
+      "kind": "file"
+    },
+    {
+      "source": "agents/sdlc_planner.toml",
+      "destination": ".codex/agents/sdlc_planner.toml",
+      "kind": "file"
+    },
+    {
+      "source": "agents/sdlc_release_agent.toml",
+      "destination": ".codex/agents/sdlc_release_agent.toml",
+      "kind": "file"
+    },
+    {
+      "source": "agents/sdlc_spec_author.toml",
+      "destination": ".codex/agents/sdlc_spec_author.toml",
+      "kind": "file"
+    },
+    {
+      "source": "agents/sdlc_spec_reviewer.toml",
+      "destination": ".codex/agents/sdlc_spec_reviewer.toml",
+      "kind": "file"
+    },
+    {
+      "source": "agents/sdlc_test_author.toml",
+      "destination": ".codex/agents/sdlc_test_author.toml",
+      "kind": "file"
+    },
+    {
+      "source": "agents/sdlc_test_reviewer.toml",
+      "destination": ".codex/agents/sdlc_test_reviewer.toml",
+      "kind": "file"
+    },
+    {
+      "source": "contracts",
+      "destination": ".workflow/contracts",
+      "kind": "directory"
+    },
+    {
+      "source": "templates",
+      "destination": ".workflow/templates",
+      "kind": "directory"
+    },
+    {
+      "source": "tools",
+      "destination": ".workflow/tools",
+      "kind": "directory"
+    },
+    {
+      "source": "references",
+      "destination": ".workflow/references",
+      "kind": "directory"
+    },
+    {
+      "source": "profile.example.json",
+      "destination": ".workflow/profile.example.json",
+      "kind": "file"
+    }
+  ],
+  "compatibility": {
+    "runtime": "Node.js 22 or later",
+    "codex": "Verify native custom agent and project skill discovery on the selected host.",
+    "permission_boundary": "Native role instructions do not isolate permissions; external protected effects require verified authority."
+  }
+}

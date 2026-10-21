@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "type": "implementation-plan",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "outcome": "IMPLEMENTATION",
+    "specification_ref": "",
+    "increments": [],
+    "tasks": [],
+    "coverage": [],
+    "verification_schedule": [],
+    "risks": []
+  }
+}

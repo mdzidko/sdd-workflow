@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "type": "defect-report",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "description": "",
+    "observed": "",
+    "expected": "",
+    "affected_versions": [],
+    "reproduction_steps": [],
+    "impact": "",
+    "source": ""
+  }
+}

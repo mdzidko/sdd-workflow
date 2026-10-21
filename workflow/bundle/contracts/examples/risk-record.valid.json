@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "type": "risk-record",
+  "id": "EXAMPLE-001",
+  "change_id": "EXAMPLE",
+  "title": "Synthetic format example; not execution evidence",
+  "status": "draft",
+  "data": {
+    "description": "Example value",
+    "likelihood": "Example value",
+    "impact": "Example value",
+    "mitigation": "Example value",
+    "owner": "Example value",
+    "status": "Example value"
+  }
+}

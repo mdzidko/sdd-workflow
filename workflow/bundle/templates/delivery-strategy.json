@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "type": "delivery-strategy",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "builds": [],
+    "verification": [],
+    "versioning": "",
+    "environments": [],
+    "recovery": "",
+    "retention": ""
+  }
+}

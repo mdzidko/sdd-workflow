@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "type": "adr",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "context": "",
+    "decision": "",
+    "alternatives": [],
+    "consequences": [],
+    "supersedes": ""
+  }
+}

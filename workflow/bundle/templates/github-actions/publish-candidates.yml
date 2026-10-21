@@ -1,0 +1,204 @@
+name: Publish and verify image candidates
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: image-candidates-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    if: github.ref_type == 'branch' && github.ref_name == vars.WORKFLOW_INTEGRATION_BRANCH
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      packages: read
+    outputs:
+      matrix: ${{ steps.catalog.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - id: catalog
+        name: Validate the project image catalog
+        shell: bash
+        run: |
+          node .workflow/tools/container-images.mjs validate --catalog .github/container-images.json
+          matrix="$(node .workflow/tools/container-images.mjs matrix --catalog .github/container-images.json)"
+          printf 'matrix=%s\n' "$matrix" >> "$GITHUB_OUTPUT"
+      - name: Block publication to an existing public GHCR package
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_OWNER: ${{ github.repository_owner }}
+          IMAGE_OWNER_TYPE: ${{ github.event.repository.owner.type }}
+          IMAGE_REPOSITORY: ${{ github.event.repository.name }}
+        run: >-
+          node .workflow/tools/container-images.mjs registry-private-check
+          --catalog .github/container-images.json
+          --owner "$IMAGE_OWNER"
+          --owner-type "$IMAGE_OWNER_TYPE"
+          --repository "$IMAGE_REPOSITORY"
+
+  publish:
+    needs: discover
+    if: needs.discover.result == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.discover.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@65b78e6e13532edd9afa3aa52ac7964289d1a9c1 # v3.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: registry
+        name: Normalize the repository image namespace
+        run: node .workflow/tools/container-images.mjs registry-prefix >> "$GITHUB_OUTPUT"
+      - id: image
+        name: Build and publish unique source candidate
+        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4 # v6.18.0
+        with:
+          context: ${{ github.workspace }}/${{ matrix.context }}
+          file: ${{ github.workspace }}/${{ matrix.dockerfile }}
+          target: ${{ matrix.target }}
+          push: true
+          tags: ${{ steps.registry.outputs.image }}/${{ matrix.id }}:candidate-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          labels: org.opencontainers.image.revision=${{ github.sha }}
+      - name: Write immutable candidate manifest
+        env:
+          IMAGE_ID: ${{ matrix.id }}
+          IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+          SOURCE_SHA: ${{ github.sha }}
+          CANDIDATE_TAG: candidate-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          IMAGE_OWNER: ${{ github.repository_owner }}
+          IMAGE_REPOSITORY: ${{ github.event.repository.name }}
+        run: >-
+          node .workflow/tools/container-images.mjs candidate-write
+          --catalog .github/container-images.json
+          --image-id "$IMAGE_ID"
+          --digest "$IMAGE_DIGEST"
+          --source-sha "$SOURCE_SHA"
+          --candidate-tag "$CANDIDATE_TAG"
+          --owner "$IMAGE_OWNER"
+          --repository "$IMAGE_REPOSITORY"
+          --output "$RUNNER_TEMP/candidate-${IMAGE_ID}.json"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: candidate-${{ matrix.id }}
+          path: ${{ runner.temp }}/candidate-${{ matrix.id }}.json
+          if-no-files-found: error
+          retention-days: 14
+
+  verify-candidate-set:
+    needs: [discover, publish]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      COMPOSE_PROJECT_NAME: ci-${{ github.run_id }}-${{ github.run_attempt }}
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: candidate-*
+          path: ${{ runner.temp }}/candidates
+          merge-multiple: true
+      - name: Require the complete candidate set and create a digest-pinned Compose override
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+          IMAGE_OWNER: ${{ github.repository_owner }}
+          IMAGE_REPOSITORY: ${{ github.event.repository.name }}
+        run: >-
+          node .workflow/tools/container-images.mjs candidate-compose
+          --catalog .github/container-images.json
+          --manifests "$RUNNER_TEMP/candidates"
+          --source-sha "$SOURCE_SHA"
+          --owner "$IMAGE_OWNER"
+          --repository "$IMAGE_REPOSITORY"
+          --output "$RUNNER_TEMP/compose.digest.json"
+          --manifest-output "$RUNNER_TEMP/candidate-set.json"
+      - name: Confirm all published packages remain private
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_OWNER: ${{ github.repository_owner }}
+          IMAGE_OWNER_TYPE: ${{ github.event.repository.owner.type }}
+          IMAGE_REPOSITORY: ${{ github.event.repository.name }}
+        run: >-
+          node .workflow/tools/container-images.mjs registry-private-check
+          --catalog .github/container-images.json
+          --owner "$IMAGE_OWNER"
+          --owner-type "$IMAGE_OWNER_TYPE"
+          --repository "$IMAGE_REPOSITORY"
+      - name: Verify every exact published digest can be pulled
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_OWNER: ${{ github.actor }}
+        shell: bash
+        run: |
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$IMAGE_OWNER" --password-stdin
+          node -e 'const fs=require("fs");const x=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));for(const s of Object.values(x.services))console.log(s.image)' "$RUNNER_TEMP/compose.digest.json" | while IFS= read -r image; do docker pull "$image"; done
+      - name: Run system acceptance against the exact candidate digests
+        shell: bash
+        run: |
+          service="$(node -e 'const c=require("./.github/container-images.json"); process.stdout.write(c.acceptance_service)')"
+          docker compose --project-name "$COMPOSE_PROJECT_NAME" -f compose.ci.yaml -f "$RUNNER_TEMP/compose.digest.json" up --pull always --no-build --abort-on-container-exit --exit-code-from "$service" "$service"
+      - name: Capture sanitized Compose status
+        if: always()
+        shell: bash
+        run: |
+          compose_args=(--project-name "$COMPOSE_PROJECT_NAME" -f compose.ci.yaml)
+          if [[ -f "$RUNNER_TEMP/compose.digest.json" ]]; then compose_args+=(-f "$RUNNER_TEMP/compose.digest.json"); fi
+          set +e
+          docker compose "${compose_args[@]}" ps --all --format json 2>/dev/null | node .workflow/tools/compose-status.mjs > "$RUNNER_TEMP/compose-status.json"
+          capture_status=$?
+          set -e
+          if (( capture_status != 0 )); then printf '{"available":false,"services":[]}\n' > "$RUNNER_TEMP/compose-status.json"; fi
+      - name: Retain sanitized Compose status on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: compose-status-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/compose-status.json
+          if-no-files-found: error
+          retention-days: 7
+      - name: Stop containers and remove disposable CI volumes
+        if: always()
+        shell: bash
+        run: |
+          [[ "$COMPOSE_PROJECT_NAME" =~ ^ci-[0-9]+-[0-9]+$ ]]
+          docker compose --project-name "$COMPOSE_PROJECT_NAME" -f compose.ci.yaml down --volumes --remove-orphans
+      - name: Retain the system-verified candidate set for a future release
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: verified-candidate-set
+          path: |
+            ${{ runner.temp }}/candidate-set.json
+            ${{ runner.temp }}/compose.digest.json
+          if-no-files-found: error
+          retention-days: 90

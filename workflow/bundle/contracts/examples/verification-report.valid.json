@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "type": "verification-report",
+  "id": "EXAMPLE-001",
+  "change_id": "EXAMPLE",
+  "title": "Synthetic format example; not execution evidence",
+  "status": "draft",
+  "data": {
+    "subject_ref": "Example value",
+    "source_sha": "Example value",
+    "environment": "Example value",
+    "checks": [],
+    "outcome": "Example value",
+    "evidence_refs": []
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "type": "mvp-map",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "capabilities": [],
+    "priorities": [],
+    "dependencies": [],
+    "exclusions": [],
+    "completion_criteria": []
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "type": "tdd-evidence",
+  "id": "EXAMPLE-001",
+  "change_id": "EXAMPLE",
+  "title": "Synthetic format example; not execution evidence",
+  "status": "draft",
+  "data": {
+    "phase": "Example value",
+    "source_sha": "Example value",
+    "test_ids": [],
+    "run_id": "Example value",
+    "classification": "Example value"
+  }
+}

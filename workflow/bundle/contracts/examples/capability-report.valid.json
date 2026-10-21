@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "type": "capability-report",
+  "id": "EXAMPLE-001",
+  "change_id": "EXAMPLE",
+  "title": "Synthetic format example; not execution evidence",
+  "status": "draft",
+  "data": {
+    "host": "Example value",
+    "version": "Example value",
+    "capabilities": [],
+    "checks": [],
+    "limitations": [],
+    "handoff_evidence": "Example value"
+  }
+}

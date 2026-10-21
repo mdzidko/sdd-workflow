@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "type": "build-record",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "source_sha": "",
+    "application_id": "",
+    "artifact_ref": "",
+    "digest": "",
+    "build_run": "",
+    "verification_refs": []
+  }
+}

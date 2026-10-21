@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "type": "human-decision",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "decision": "",
+    "subject_ref": "",
+    "subject_revision": "",
+    "actor": "",
+    "source": "",
+    "evidence_ref": ""
+  }
+}

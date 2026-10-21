@@ -1,0 +1,18 @@
+{
+  "schema_version": "1",
+  "type": "requirements",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "need": "",
+    "users": [],
+    "scope": "",
+    "exclusions": [],
+    "requirements": [],
+    "examples": [],
+    "decisions": [],
+    "unknowns": []
+  }
+}

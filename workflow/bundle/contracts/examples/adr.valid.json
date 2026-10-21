@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "type": "adr",
+  "id": "EXAMPLE-001",
+  "change_id": "EXAMPLE",
+  "title": "Synthetic format example; not execution evidence",
+  "status": "draft",
+  "data": {
+    "context": "Example value",
+    "decision": "Example value",
+    "alternatives": [],
+    "consequences": [],
+    "supersedes": "Example value"
+  }
+}

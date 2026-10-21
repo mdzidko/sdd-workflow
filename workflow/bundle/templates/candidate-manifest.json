@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "type": "candidate-manifest",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "source_revisions": [],
+    "applications": [],
+    "configuration_ref": "",
+    "migrations": [],
+    "compatibility": [],
+    "evidence_refs": []
+  }
+}

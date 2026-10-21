@@ -1,0 +1,18 @@
+{
+  "schema_version": "1",
+  "type": "context-package",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "request": "",
+    "base_sha": "",
+    "approved_intent": [],
+    "implemented_behavior": [],
+    "planned_capabilities": [],
+    "sources": [],
+    "constraints": [],
+    "unknowns": []
+  }
+}

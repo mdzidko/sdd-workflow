@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "type": "business-decision",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "question": "",
+    "decision": "",
+    "rationale": "",
+    "source": "",
+    "subject_revision": ""
+  }
+}

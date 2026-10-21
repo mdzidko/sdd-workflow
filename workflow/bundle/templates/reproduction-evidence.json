@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "type": "reproduction-evidence",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "source_sha": "",
+    "environment": "",
+    "operation_ids": [],
+    "observed": "",
+    "expected": "",
+    "reproducible": false
+  }
+}

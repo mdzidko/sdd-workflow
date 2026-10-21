@@ -1,0 +1,24 @@
+{
+  "schema_version": "1",
+  "type": "scenarios",
+  "id": "EXAMPLE-001",
+  "change_id": "EXAMPLE",
+  "title": "Synthetic format example; not execution evidence",
+  "status": "draft",
+  "data": {
+    "scenarios": [
+      {
+        "id": "SC-001",
+        "requirement_ids": [
+          "REQ-001"
+        ],
+        "given": "A valid request",
+        "when": "The user submits it",
+        "then": "The request is retained."
+      }
+    ],
+    "requirement_coverage": [],
+    "decisions": [],
+    "unknowns": []
+  }
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sdlc Foundations"
+  short_description: "Operation-backed SDLC specialist workflow"
+  default_prompt: "Use $sdlc-foundations for the assigned workflow task."

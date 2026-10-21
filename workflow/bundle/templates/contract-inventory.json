@@ -1,0 +1,14 @@
+{
+  "schema_version": "1",
+  "type": "contract-inventory",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "contracts": [],
+    "producers": [],
+    "consumers": [],
+    "compatibility_checks": []
+  }
+}

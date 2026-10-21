@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "type": "environment-descriptor",
+  "id": "EXAMPLE-001",
+  "change_id": "EXAMPLE",
+  "title": "Synthetic format example; not execution evidence",
+  "status": "draft",
+  "data": {
+    "name": "Example value",
+    "kind": "Example value",
+    "applications": [],
+    "configuration_ref": "Example value",
+    "credential_refs": [],
+    "isolation": "Example value",
+    "cleanup": "Example value"
+  }
+}

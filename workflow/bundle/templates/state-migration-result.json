@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "type": "state-migration-result",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "plan_ref": "",
+    "outcome": "",
+    "migrated_changes": [],
+    "verification_refs": [],
+    "recovery_status": ""
+  }
+}

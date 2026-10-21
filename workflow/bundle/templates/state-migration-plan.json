@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "type": "state-migration-plan",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "source_version": "",
+    "target_version": "",
+    "affected_changes": [],
+    "transformations": [],
+    "verification": [],
+    "recovery": "",
+    "approval_ref": ""
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "type": "operation-request",
+  "id": "",
+  "change_id": "",
+  "title": "",
+  "status": "draft",
+  "data": {
+    "operation": "",
+    "operation_version": "",
+    "request_id": "",
+    "input": {},
+    "expected_revision": ""
+  }
+}

@@ -1,0 +1,242 @@
+name: Application verification
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: application-tests-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  discover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      matrices: ${{ steps.matrix.outputs.matrices }}
+      count: ${{ steps.matrix.outputs.count }}
+      focused_count: ${{ steps.matrix.outputs.focused_count }}
+      fast_count: ${{ steps.matrix.outputs.fast_count }}
+      acceptance_count: ${{ steps.matrix.outputs.acceptance_count }}
+      system_count: ${{ steps.matrix.outputs.system_count }}
+      source_sha: ${{ steps.matrix.outputs.source_sha }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - id: matrix
+        name: Validate the project profile and discover impacted application checks
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          changed_file="$RUNNER_TEMP/changed-paths.json"
+          if [[ "$BASE_SHA" =~ ^0+$ ]] || ! git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
+            printf '[]\n' > "$changed_file"
+          else
+            git diff --name-only "$BASE_SHA...$SOURCE_SHA" | node -e 'let s="";process.stdin.on("data",c=>s+=c).on("end",()=>process.stdout.write(JSON.stringify(s.split(/\r?\n/).filter(Boolean))))' > "$changed_file"
+          fi
+          matrix_json="$(node .workflow/tools/ci-test-matrix.mjs matrix --profile .workflow/ci-profile.json --changed-paths "$changed_file")"
+          count="$(node -e 'process.stdout.write(String(JSON.parse(process.argv[1]).include.length))' "$matrix_json")"
+          matrices="$(node -e 'const m=JSON.parse(process.argv[1]).matrices;process.stdout.write(JSON.stringify(Object.fromEntries(Object.entries(m).map(([k,v])=>[k,{include:v}]))))' "$matrix_json")"
+          counts="$(node -e 'const m=JSON.parse(process.argv[1]).matrices;process.stdout.write(JSON.stringify(Object.fromEntries(Object.entries(m).map(([k,v])=>[k,v.length]))))' "$matrix_json")"
+          printf 'matrices=%s\ncount=%s\nsource_sha=%s\n' "$matrices" "$count" "$SOURCE_SHA" >> "$GITHUB_OUTPUT"
+          for category in focused fast acceptance system; do
+            value="$(node -e 'const c=JSON.parse(process.argv[1]);process.stdout.write(String(c[process.argv[2]]))' "$counts" "$category")"
+            printf '%s_count=%s\n' "$category" "$value" >> "$GITHUB_OUTPUT"
+          done
+
+  focused:
+    needs: discover
+    if: needs.discover.result == 'success' && needs.discover.outputs.focused_count != '0'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.discover.outputs.matrices).focused }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          ref: ${{ needs.discover.outputs.source_sha }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - name: Run the focused profile without a shell
+        env:
+          WORKFLOW_TEST_APPLICATION: ${{ matrix.application_id }}
+          WORKFLOW_TEST_PROFILE: ${{ matrix.profile }}
+        run: node .workflow/tools/ci-test-matrix.mjs run
+      - name: Write a sanitized profile result
+        if: always()
+        env:
+          APPLICATION_ID: ${{ matrix.application_id }}
+          CATEGORY: ${{ matrix.category }}
+          PROFILE_NAME: ${{ matrix.profile }}
+          RESULT: ${{ job.status }}
+        run: node -e 'require("fs").writeFileSync(process.env.RUNNER_TEMP+"/profile-result.json",JSON.stringify({application_id:process.env.APPLICATION_ID,category:process.env.CATEGORY,profile:process.env.PROFILE_NAME,result:process.env.RESULT})+"\n")'
+      - name: Retain sanitized profile result
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: focused-test-${{ matrix.profile }}-${{ matrix.application_key }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/profile-result.json
+          if-no-files-found: error
+          retention-days: 14
+
+  fast:
+    needs: discover
+    if: needs.discover.result == 'success' && needs.discover.outputs.fast_count != '0'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.discover.outputs.matrices).fast }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          ref: ${{ needs.discover.outputs.source_sha }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - name: Run the fast integration profile without a shell
+        env:
+          WORKFLOW_TEST_APPLICATION: ${{ matrix.application_id }}
+          WORKFLOW_TEST_PROFILE: ${{ matrix.profile }}
+        run: node .workflow/tools/ci-test-matrix.mjs run
+      - name: Write sanitized fast profile result
+        if: always()
+        env:
+          APPLICATION_ID: ${{ matrix.application_id }}
+          CATEGORY: ${{ matrix.category }}
+          PROFILE_NAME: ${{ matrix.profile }}
+          RESULT: ${{ job.status }}
+        run: node -e 'require("fs").writeFileSync(process.env.RUNNER_TEMP+"/profile-result.json",JSON.stringify({application_id:process.env.APPLICATION_ID,category:process.env.CATEGORY,profile:process.env.PROFILE_NAME,result:process.env.RESULT})+"\n")'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: fast-test-${{ matrix.profile }}-${{ matrix.application_key }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/profile-result.json
+          if-no-files-found: error
+          retention-days: 14
+
+  acceptance:
+    needs: discover
+    if: needs.discover.result == 'success' && needs.discover.outputs.acceptance_count != '0'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.discover.outputs.matrices).acceptance }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          ref: ${{ needs.discover.outputs.source_sha }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - name: Run the application acceptance profile without a shell
+        env:
+          WORKFLOW_TEST_APPLICATION: ${{ matrix.application_id }}
+          WORKFLOW_TEST_PROFILE: ${{ matrix.profile }}
+        run: node .workflow/tools/ci-test-matrix.mjs run
+      - name: Write sanitized acceptance profile result
+        if: always()
+        env:
+          APPLICATION_ID: ${{ matrix.application_id }}
+          CATEGORY: ${{ matrix.category }}
+          PROFILE_NAME: ${{ matrix.profile }}
+          RESULT: ${{ job.status }}
+        run: node -e 'require("fs").writeFileSync(process.env.RUNNER_TEMP+"/profile-result.json",JSON.stringify({application_id:process.env.APPLICATION_ID,category:process.env.CATEGORY,profile:process.env.PROFILE_NAME,result:process.env.RESULT})+"\n")'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: acceptance-test-${{ matrix.profile }}-${{ matrix.application_key }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/profile-result.json
+          if-no-files-found: error
+          retention-days: 14
+
+  system:
+    needs: discover
+    if: needs.discover.result == 'success' && needs.discover.outputs.system_count != '0'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.discover.outputs.matrices).system }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          ref: ${{ needs.discover.outputs.source_sha }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+      - name: Run the system-wide profile without a shell
+        env:
+          WORKFLOW_TEST_APPLICATION: ${{ matrix.application_id }}
+          WORKFLOW_TEST_PROFILE: ${{ matrix.profile }}
+        run: node .workflow/tools/ci-test-matrix.mjs run
+      - name: Write sanitized system profile result
+        if: always()
+        env:
+          APPLICATION_ID: ${{ matrix.application_id }}
+          CATEGORY: ${{ matrix.category }}
+          PROFILE_NAME: ${{ matrix.profile }}
+          RESULT: ${{ job.status }}
+        run: node -e 'require("fs").writeFileSync(process.env.RUNNER_TEMP+"/profile-result.json",JSON.stringify({application_id:process.env.APPLICATION_ID,category:process.env.CATEGORY,profile:process.env.PROFILE_NAME,result:process.env.RESULT})+"\n")'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: system-test-${{ matrix.profile }}-${{ matrix.application_key }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/profile-result.json
+          if-no-files-found: error
+          retention-days: 14
+
+  required-check:
+    name: Required application verification
+    if: always()
+    needs: [discover, focused, fast, acceptance, system]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require a non-empty matrix and successful current-revision results
+        env:
+          DISCOVER_RESULT: ${{ needs.discover.result }}
+          DISCOVERED_COUNT: ${{ needs.discover.outputs.count }}
+          DISCOVERED_SHA: ${{ needs.discover.outputs.source_sha }}
+          FOCUSED_COUNT: ${{ needs.discover.outputs.focused_count }}
+          FOCUSED_RESULT: ${{ needs.focused.result }}
+          FAST_COUNT: ${{ needs.discover.outputs.fast_count }}
+          FAST_RESULT: ${{ needs.fast.result }}
+          ACCEPTANCE_COUNT: ${{ needs.discover.outputs.acceptance_count }}
+          ACCEPTANCE_RESULT: ${{ needs.acceptance.result }}
+          SYSTEM_COUNT: ${{ needs.discover.outputs.system_count }}
+          SYSTEM_RESULT: ${{ needs.system.result }}
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          test "$DISCOVER_RESULT" = success
+          test "$DISCOVERED_COUNT" -gt 0
+          test "$DISCOVERED_SHA" = "$EXPECTED_SHA"
+          check_category() {
+            category_count="$1"
+            category_result="$2"
+            test "$category_count" -gt 0
+            test "$category_result" = success
+          }
+          check_category "$FOCUSED_COUNT" "$FOCUSED_RESULT"
+          check_category "$FAST_COUNT" "$FAST_RESULT"
+          check_category "$ACCEPTANCE_COUNT" "$ACCEPTANCE_RESULT"
+          check_category "$SYSTEM_COUNT" "$SYSTEM_RESULT"

@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "type": "activation-record",
+  "id": "EXAMPLE-001",
+  "change_id": "EXAMPLE",
+  "title": "Synthetic format example; not execution evidence",
+  "status": "draft",
+  "data": {
+    "previous_version": "Example value",
+    "candidate_version": "Example value",
+    "approval_ref": "Example value",
+    "verification_refs": [],
+    "activated_at": "Example value"
+  }
+}
