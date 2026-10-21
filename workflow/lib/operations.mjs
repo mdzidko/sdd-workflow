@@ -38,6 +38,19 @@ function hasReviewedGreenTestAuthor(change, task, state) {
   );
 }
 
+function initializationGit(root, args) {
+  try {
+    return git(root, args);
+  } catch (error) {
+    if (error.code !== 'GIT_FAILED' || !/\b(?:EPERM|EACCES|ENOENT)\b/i.test(error.message))
+      throw error;
+    throw new WorkflowError(
+      'GIT_ACCESS_UNAVAILABLE',
+      'Project initialization needs read-only Git access to verify the repository and locate its local exclude file. Allow the Node workflow process to run Git (or install Git), then retry. No project profile or workflow state was written.',
+    );
+  }
+}
+
 handlers['workflow.init'] = async (input, { projectRoot: root }) => {
   const profile = validateProfile(input.profile ?? {});
   const bundle = await handlers['bundle.inspect']({}, { projectRoot: root });
@@ -48,7 +61,7 @@ handlers['workflow.init'] = async (input, { projectRoot: root }) => {
   );
   profile.bundle_version = bundle.manifest.bundle_version;
   profile.bundle_hash = bundle.manifest_hash;
-  git(root, ['rev-parse', '--show-toplevel']);
+  initializationGit(root, ['rev-parse', '--show-toplevel']);
   const profilePath = await stateFile(root, 'project.json');
   const pendingPath = await stateFile(root, 'initialization.pending.json');
   try {
@@ -107,7 +120,10 @@ handlers['workflow.init'] = async (input, { projectRoot: root }) => {
     receipts: {},
     events: [],
   };
-  const excludePath = path.resolve(root, git(root, ['rev-parse', '--git-path', 'info/exclude']));
+  const excludePath = path.resolve(
+    root,
+    initializationGit(root, ['rev-parse', '--git-path', 'info/exclude']),
+  );
   await fs.mkdir(path.dirname(excludePath), { recursive: true });
   let exclusions = '';
   try {
