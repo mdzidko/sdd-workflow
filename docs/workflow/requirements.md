@@ -30,7 +30,7 @@ Throughout these documents, `main` is shorthand for the configured integration b
 | WF-014 | Provide versioned templates and machine-readable contracts for every standard artifact type. Generate execution evidence from operations. Validate structure and traceability separately from semantic review. |
 | WF-015 | Create a change branch automatically from a verified main revision. After the first substantive commit and push, ensure exactly one draft PR. Keep feature changes across applications together when they share this repository. |
 | WF-016 | After each completed task with repository changes, create a scoped incremental commit and push. Do not include unrelated work or create empty commits. Recover partial success before marking the task DONE. An approved test task may checkpoint RED. |
-| WF-017 | Before integration, run full-change review, required checks on the integration candidate, and human acceptance. Squash merge one feature into one main commit. Delete a branch only after confirming merge and absence of unsaved work. |
+| WF-017 | Before integration, run the planned checks and task reviews. The user reviews and merges the ready PR manually; the workflow waits for GitHub to confirm the merge before continuing. Delete a branch only after confirming merge and absence of unsaved work. |
 | WF-018 | Bind human decisions to their actual authenticated source and relevant content/revision. Invalidate approvals and test evidence when their subject changes. Do not treat agent output, timeout, or a typed actor field as human approval. |
 | WF-019 | Use registered, versioned operations with input/output schemas, preconditions, scope, timeout, reconciliation, errors, and evidence. Prevent shell improvisation from bypassing controller-owned gates or privileged actions. |
 | WF-020 | Persist process state and an append-only operation/event history. Support restart, interrupted external effects, optimistic revision checks, operation deduplication, resource locks, bounded retries, and explicit blocked/waiting states. |
@@ -53,7 +53,8 @@ Throughout these documents, `main` is shorthand for the configured integration b
 - Product goal and MVP boundary before architecture is finalized.
 - Architecture, implementation/test standards, and autonomy boundaries before dependent bootstrap.
 - Business specification after requirements and scenarios are reviewed.
-- Final change acceptance before squash merge.
+- Business artifact acceptance in chat before dependent planning or implementation.
+- Manual PR review and merge by the user; the workflow only verifies the merged status before continuing.
 - Material changes to previously approved behavior or architecture.
 - Workflow activation that changes human gates, privileges, completion rules, or state migration.
 - Destructive or out-of-policy deployment/data actions.

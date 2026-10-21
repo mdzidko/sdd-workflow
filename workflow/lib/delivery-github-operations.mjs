@@ -132,7 +132,7 @@ export function registerDeliveryGithubOperations(handlers) {
       change.merge_receipt?.pull_request_number === change.pull_request?.number &&
         /^[a-f0-9]{40,64}$/i.test(change.merge_receipt?.merge_commit_sha ?? ''),
       'MERGE_REQUIRED',
-      'Candidate images can be published only from a change with a confirmed squash-merge receipt.',
+      'Candidate images can be published only from a change with a confirmed user-merge receipt.',
     );
     const configuration = githubConfiguration(profile.github, context.env);
     const result = await candidateRun(context, configuration, change, profile, input.run_id);

@@ -30,7 +30,7 @@ Each implementation task selects these scenarios, adds meaningful boundary cases
 | AC-022 | WF-016 | Given a completed task and unrelated local edits, when checkpoint runs, then only owned approved changes are committed and pushed; uncertain ownership blocks the operation. |
 | AC-023 | WF-016 | Given a task with no repository diff, when checkpoint runs, then no empty commit is created and the non-file result remains recorded. |
 | AC-024 | WF-016, WF-020 | Given a successful local commit and failed push, when execution resumes, then the existing commit is reconciled and pushed once before task DONE is recorded. |
-| AC-025 | WF-017, WF-018 | Given all tasks complete but stale checks, a changed target branch, or missing final human acceptance, when merge is requested, then integration is blocked until the current candidate is verified. |
+| AC-025 | WF-017, WF-018 | Given all tasks complete, when the user manually reviews and merges the ready PR, then stage advancement confirms the merged PR through GitHub and continues without a workflow-side PR approval or merge action. |
 | AC-026 | WF-017 | Given an approved verified feature, when merge completes, then main receives one squash commit; cleanup confirms remote merge and preserves unsaved local work. |
 | AC-027 | WF-019 | Given an unknown operation or disallowed parameters, when an agent requests execution, then it is rejected without arbitrary shell fallback or privileged side effects. |
 | AC-028 | WF-019, WF-020 | Given an agent attempts to alter controller state, invoke human approval, use publishing credentials, or merge directly, when the adapter capability boundary is tested, then access is prevented and the attempt is recorded. Prompt-only restrictions do not satisfy this scenario. |
@@ -62,7 +62,7 @@ Each implementation task selects these scenarios, adds meaningful boundary cases
 
 1. From a workflow checkout, install into a disposable empty target, verify Codex skill/agent discovery there, initialize a project from an idea, exercise both foundation approvals, and deliver verified bootstrap. Repeat installation into an existing repository and verify preservation of its existing files and Git history.
 2. Submit a description, retrieve context, clarify a business decision, approve scenarios, plan two small increments, and alternate test author/reviewer and implementer roles.
-3. Commit and push after task checkpoints, recover an interrupted push, finish review, receive human acceptance, and squash merge one PR.
+3. Commit and push after task checkpoints, recover an interrupted push, let the user review and merge the PR manually, then confirm the merged status and continue.
 4. Build a multi-application artifact set from merged source, publish privately, test exact images, promote without rebuilding, and verify local deployment.
 5. Reproduce and fix a defect with a regression test; separately exercise ambiguous intent and an already-fixed deployed version.
 6. Change a workflow rule under the old bundle, reject self-activation, evaluate the candidate, activate with the required decision, and preserve an existing run on its original version.

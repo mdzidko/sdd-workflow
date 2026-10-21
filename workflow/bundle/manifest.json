@@ -1,6 +1,6 @@
 {
   "schema_version": "1",
-  "bundle_version": "0.1.29",
+  "bundle_version": "0.1.30",
   "name": "codex-sdlc-workflow",
   "entry_skill": "sdlc-workflow",
   "resources": [

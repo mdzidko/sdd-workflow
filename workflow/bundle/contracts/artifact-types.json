@@ -1939,7 +1939,7 @@
       ]
     },
     "merge-receipt": {
-      "description": "Authenticated squash merge outcome",
+      "description": "GitHub-confirmed user merge outcome",
       "generated": true,
       "required": [
         "pr_url",

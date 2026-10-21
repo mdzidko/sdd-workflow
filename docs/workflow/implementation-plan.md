@@ -2,6 +2,8 @@
 
 Status: implementation is progressing on `workflow/W-000-bootstrap`; multiple verified increments have been committed and pushed. The plan is not complete, the full eight-journey acceptance gate has not passed, and this candidate is not ready for activation or PR. The selected direction is recorded in [Codex integration architecture](codex-integration.md). All paths below concern the workflow itself; each target project's application layout remains a Stage 0 decision.
 
+Policy update for bundle 0.1.30: business decisions are recorded from explicit chat responses, PRs are created ready for review, and users review/merge manually. The workflow only records merge completion after GitHub confirms it. Older implementation notes below describe earlier behavior unless updated explicitly.
+
 ### Current task-level implementation status
 
 | Tasks | Local implementation status | Remaining acceptance or capability |
@@ -80,7 +82,7 @@ Use the current Codex session to coordinate bootstrap tasks; do not pretend the 
 
 At implementation start, create `workflow/W-000-bootstrap` for the first bounded foundation increment and its draft PR. Subsequent independently reviewable increments use `workflow/W-<id>-<slug>`; small tasks within one increment share its branch. This is not one long-lived branch for all 22 tasks.
 
-After a task satisfies its checks/review, commit its owned diff and push. A no-file task records its result without an empty commit. An intentional RED test checkpoint is allowed. Before squash merge, the completed increment must be green, reviewed as a whole, and accepted by the human. Do not bypass branch protection because automation is still being built.
+After a task satisfies its checks/review, commit its owned diff and push. A no-file task records its result without an empty commit. An intentional RED test checkpoint is allowed. Before PR creation, the completed increment must be green and reviewed as a whole. The user reviews and merges the ready PR manually; do not bypass branch protection.
 
 Review artifacts and task completion are controller-verified records, not free-form claims. Initial bootstrap records are labelled host-coordinated and later imported with provenance rather than fabricated as engine-generated evidence.
 
@@ -166,13 +168,13 @@ Every task has the common delivery protocol in section 4. Dependency IDs refer t
 - Acceptance: repeated start/checkpoint does not duplicate work; unrelated edits are preserved; failed push resumes the existing commit; task state reaches DONE only after its required checkpoint completes.
 - Verification: AC-021–AC-024, AC-029, AC-030 with real temporary repositories and local bare remotes, including spaces in paths.
 
-### W-009 — Automate draft PRs, verified human decisions, and squash merge
+### W-009 — Automate PR creation and verify user merge
 
 - Owner: GitHub integration implementer; independent reviewer.
 - Depends on: W-006–W-008.
-- Deliver: configured GitHub adapter, GitHub App token provisioning interface, PR ensure/refresh/ready, authenticated human decision ingestion, current check inspection, expected-head merge, and safe cleanup.
-- Acceptance: exactly one PR; bots cannot approve their own work; protected main is not bypassed; required PR/main workflows actually trigger under the chosen identity. Treat changed integration targets as revalidation, not permission to merge stale results.
-- Verification: AC-006, AC-017, AC-021, AC-025, AC-026, AC-034. Deterministic API tests first; live checks require an authorized test repository, App installation, and human reviewer.
+- Deliver: configured GitHub adapter, GitHub App token provisioning interface, ready PR ensure/refresh, explicit chat-decision recording, current check inspection, manual merge confirmation, and safe cleanup. The user performs PR review and merge; workflow code does not merge.
+- Acceptance: exactly one ready PR; business decisions bind to current artifact content; protected main is not bypassed; required PR/main workflows actually trigger under the chosen identity. Treat changed integration targets as revalidation, not permission to merge stale results.
+- Verification: AC-006, AC-017, AC-021, AC-025, AC-026, AC-034. Deterministic API tests first; live checks require an authorized test repository and App installation.
 
 ### W-010 — Retrieve bounded repository context on demand
 
@@ -311,8 +313,8 @@ The following names are registered by the current local CLI. They use structured
 - Workflow and bundle: `workflow.setup`, `workflow.init`, `workflow.inspect`, `workflow.resume`, `workflow.doctor`, `workflow.lock.inspect`, `workflow.lock.recover`, `bundle.inspect`, `bundle.install`, `bundle.preflight`.
 - Artifact and context: `artifact.create`, `artifact.validate`, `spec.validate`, `plan.validate`, `context.prepare`, `context.refresh`, `repo.search`, `repo.read`, `tests.find`.
 - Verification and TDD: `test.schedule`, `tests.run_scheduled`, `tests.run`, `tdd.record`, `quality.check`.
-- Tasks and gates: `task.prepare`, `task.record_result`, `review.request`, `review.resolve`, `decision.ingest`, `increment.inspect`, `increment.advance`, `stage.inspect`, `stage.advance`.
-- Changes and GitHub: `change.start`, `change.route`, `change.checkpoint`, `change.cleanup`, `pr.ensure`, `pr.refresh`, `pr.mark_ready`, `change.squash_merge`, `ci.inspect`, `ci.await`, `evaluation.ingest`.
+- Tasks and gates: `task.prepare`, `task.record_result`, `review.request`, `review.resolve`, `decision.accept`, `increment.inspect`, `increment.advance`, `stage.inspect`, `stage.advance`.
+- Changes and GitHub: `change.start`, `change.route`, `change.checkpoint`, `change.cleanup`, `pr.ensure`, `pr.refresh`, `change.confirm_merge`, `ci.inspect`, `ci.await`, `evaluation.ingest`.
 - Delivery: `images.publish`, `images.verify`, `release.publish`, `deploy.local`, `deploy.verify`, `deploy.recover`.
 - Lifecycle placeholders: `workflow.activate` and `workflow.migrate` are registered fail-closed endpoints; they do not activate a bundle or mutate pinned state until trusted authority and protected execution boundaries are implemented.
 

@@ -1,6 +1,6 @@
 {
   "name": "codex-sdlc-workflow",
-  "version": "0.1.29",
+  "version": "0.1.30",
   "private": true,
   "type": "module",
   "description": "Reusable Codex skills and deterministic software delivery operations",

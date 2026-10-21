@@ -102,31 +102,6 @@ function validatePullRequest(pullRequest, change, baseBranch, configuration) {
   return summarizePullRequest(pullRequest);
 }
 
-function requirePublishedDecisionSubject(projectRoot, headSha, artifactRef, subjectHash) {
-  const committed = git(projectRoot, ['show', `${headSha}:${artifactRef.path}`], {
-    allowFailure: true,
-  });
-  requireValue(
-    committed.status === 0,
-    'DECISION_SUBJECT_NOT_PUBLISHED',
-    'The approved artifact must be present in the current pull request head before human review.',
-  );
-  let parsed;
-  try {
-    parsed = JSON.parse(committed.stdout);
-  } catch {
-    throw new WorkflowError(
-      'DECISION_SUBJECT_NOT_PUBLISHED',
-      'The artifact at the current pull request head is not valid JSON.',
-    );
-  }
-  requireValue(
-    hash(parsed) === subjectHash,
-    'DECISION_SUBJECT_NOT_PUBLISHED',
-    'The artifact in the pull request differs from the content submitted for human approval.',
-  );
-}
-
 async function listMatchingPullRequests(context, configuration, change, baseBranch) {
   const head = encodeURIComponent(`${configuration.owner}:${change.branch}`);
   const base = encodeURIComponent(baseBranch);
@@ -210,7 +185,7 @@ export function registerGithubOperations(handlers) {
           receipt.commit_sha === headSha,
       ),
       'CHECKPOINT_REQUIRED',
-      'Push a completed task checkpoint on the current branch before ensuring a draft pull request.',
+      'Push a completed task checkpoint on the current branch before ensuring a ready pull request.',
     );
     requireValue(
       refs.get(`refs/heads/${change.branch}`) === headSha,
@@ -276,7 +251,7 @@ export function registerGithubOperations(handlers) {
             head: change.branch,
             base: profile.repository.base_branch,
             body,
-            draft: true,
+            draft: false,
           },
         },
       );
@@ -299,12 +274,6 @@ export function registerGithubOperations(handlers) {
       'STALE_REVISION',
       'The pull request head does not match the current pushed change checkpoint.',
     );
-    if (created)
-      requireValue(
-        summary.draft,
-        'PR_NOT_DRAFT',
-        'A newly created pull request must be in draft state.',
-      );
     change.pull_request = summary;
     await save(projectRoot, state, 'pr.ensure', {
       change_id: change.id,
@@ -611,483 +580,17 @@ export function registerGithubOperations(handlers) {
     return { evaluation: evidence, already_ingested: false };
   };
 
-  handlers['decision.ingest'] = async (input, { projectRoot, ...context }) => {
-    if (
-      input &&
-      ['actor', 'approved', 'decision', 'kind', 'source', 'status'].some((key) =>
-        Object.hasOwn(input, key),
-      )
-    )
-      throw new WorkflowError(
-        'UNTRUSTED_DECISION',
-        'Caller-supplied actor, source, or decision claims are not human evidence.',
-      );
-    requireValue(
-      input &&
-        Object.keys(input).every((key) =>
-          ['change_id', 'artifact_id', 'issue_number'].includes(key),
-        ) &&
-        typeof input.change_id === 'string' &&
-        typeof input.artifact_id === 'string' &&
-        (input.issue_number === undefined ||
-          (Number.isInteger(input.issue_number) && input.issue_number > 0)),
-      'VALIDATION_FAILED',
-      'A decision can only be ingested by change, registered artifact ID, and an optional GitHub Issue number for no-file bugfix evidence; caller-supplied actor or decision claims are not accepted.',
-    );
-    const { profile, state } = await load(projectRoot);
-    const configuration = githubConfiguration(profile.github, context.env);
-    const change = findChange(state, input.change_id);
-    const artifactRef = change.artifacts.find((entry) => entry.id === input.artifact_id);
-    requireValue(
-      artifactRef,
-      'ARTIFACT_NOT_FOUND',
-      'The decision subject is not registered to this change.',
-    );
-    const artifact = await readJson(
-      await safePath(projectRoot, artifactRef.path, {
-        protectedAccess: artifactRef.path.startsWith('.workflow-runtime/'),
-      }),
-    );
-    const subjectHash = hash(artifact);
-    requireValue(
-      subjectHash === artifactRef.content_hash,
-      'STALE_ARTIFACT',
-      'The decision subject changed after registration; refresh and review its current content.',
-    );
-    const automationLogins = profile.github.automation_logins ?? [];
-    requireValue(
-      Array.isArray(automationLogins) &&
-        automationLogins.every(
-          (login) => typeof login === 'string' && /^[A-Za-z0-9-]{1,39}(?:\[bot\])?$/.test(login),
-        ),
-      'GITHUB_CONFIG_INVALID',
-      'automation_logins must be a list of GitHub logins.',
-    );
-    const marker = `<!-- codex-sdlc-decision: change=${change.id} artifact=${artifactRef.id} content=${subjectHash} -->`;
-    if (input.issue_number !== undefined) {
-      requireValue(
-        change.kind === 'BUGFIX' &&
-          artifact.type === 'defect-report' &&
-          artifact.data.already_fixed_deployment_id !== undefined &&
-          artifactRef.path.startsWith('.workflow-runtime/no-file-evidence/'),
-        'DECISION_SOURCE_INVALID',
-        'GitHub Issue decisions are reserved for protected no-file BUGFIX evidence already present in a verified deployment.',
-      );
-      requireValue(
-        change.intent_issue_number === undefined ||
-          change.intent_issue_number === input.issue_number,
-        'DECISION_SOURCE_CONFLICT',
-        'This no-file defect report is already bound to another GitHub Issue.',
-      );
-      const issuePath = repositoryEndpoint(configuration, `/issues/${input.issue_number}`);
-      const { data: issue } = await githubRequest(
-        { ...context, projectRoot },
-        configuration,
-        issuePath,
-      );
-      requireValue(
-        issue?.number === input.issue_number &&
-          issue.state === 'open' &&
-          !issue.pull_request &&
-          typeof issue.body === 'string' &&
-          issue.body.includes(`<!-- codex-sdlc-change: ${change.id} -->`),
-        'DECISION_SOURCE_INVALID',
-        'Use an open GitHub Issue linked to this change with the exact change marker in its body.',
-      );
-      if (change.intent_issue_number === undefined) {
-        change.intent_issue_number = input.issue_number;
-        await save(projectRoot, state, 'decision.issue.bind', {
-          change_id: change.id,
-          artifact_id: artifactRef.id,
-          issue_number: input.issue_number,
-          subject_hash: subjectHash,
-        });
-      }
-      const { data: comments, headers } = await githubRequest(
-        { ...context, projectRoot },
-        configuration,
-        repositoryEndpoint(configuration, `/issues/${input.issue_number}/comments?per_page=100`),
-      );
-      requireValue(
-        Array.isArray(comments) && !headers.get('link')?.includes('rel="next"'),
-        'GITHUB_LIST_INCOMPLETE',
-        'GitHub did not return the complete Issue comment history; refusing to infer a business decision.',
-      );
-      const permitted = new Set(reviewers.map((login) => login.toLowerCase()));
-      const automation = new Set(automationLogins.map((login) => login.toLowerCase()));
-      const latestByReviewer = new Map();
-      for (const comment of comments) {
-        const login = comment.user?.login;
-        const created = Date.parse(comment.created_at);
-        const body = comment.body;
-        if (
-          typeof login !== 'string' ||
-          !Number.isFinite(created) ||
-          !Number.isInteger(comment.id) ||
-          typeof body !== 'string' ||
-          !body.includes(marker)
-        )
-          continue;
-        const decision = body.trimStart().startsWith('APPROVED ')
-          ? 'APPROVED'
-          : body.trimStart().startsWith('CHANGES_REQUESTED ')
-            ? 'CHANGES_REQUESTED'
-            : null;
-        if (!decision) continue;
-        const key = login.toLowerCase();
-        const existing = latestByReviewer.get(key);
-        if (
-          !existing ||
-          created > existing.created ||
-          (created === existing.created && comment.id > existing.comment.id)
-        )
-          latestByReviewer.set(key, { comment, created, decision });
-      }
-      const latestDecision = [...latestByReviewer.entries()]
-        .filter(
-          ([login, item]) =>
-            permitted.has(login) &&
-            login !== issue.user?.login?.toLowerCase() &&
-            !automation.has(login) &&
-            item.comment.user?.type === 'User',
-        )
-        .sort(
-          (left, right) =>
-            right[1].created - left[1].created || right[1].comment.id - left[1].comment.id,
-        )[0];
-      if (!latestDecision) {
-        const previous = change.approvals?.find(
-          (entry) => entry.artifact_id === artifactRef.id && entry.provider === 'github_issue',
-        );
-        if (previous && previous.status !== 'SUPERSEDED') {
-          change.approvals = change.approvals.map((entry) =>
-            entry.artifact_id === artifactRef.id
-              ? { ...entry, status: 'SUPERSEDED', superseded_at: new Date().toISOString() }
-              : entry,
-          );
-          await save(projectRoot, state, 'decision.issue.supersede', {
-            change_id: change.id,
-            artifact_id: artifactRef.id,
-            issue_number: input.issue_number,
-            subject_hash: subjectHash,
-          });
-        }
-        return {
-          status: 'AWAITING_HUMAN',
-          artifact_id: artifactRef.id,
-          subject_hash: subjectHash,
-          issue_number: input.issue_number,
-          issue_url: issue.html_url,
-          required_marker: marker,
-          required_comments: {
-            approve: `APPROVED ${marker}`,
-            request_changes: `CHANGES_REQUESTED ${marker}`,
-          },
-          message:
-            'An authenticated human must comment on the linked Issue with one of the exact decision prefixes and this marker. This path is only for no-file BUGFIX evidence.',
-        };
-      }
-      const [login, { comment, decision: action }] = latestDecision;
-      const status = action === 'APPROVED' ? 'APPROVED' : 'REJECTED';
-      const decision = {
-        id: `D-${artifactRef.id}`,
-        artifact_id: artifactRef.id,
-        subject_hash: subjectHash,
-        status,
-        provider: 'github_issue',
-        issue_number: input.issue_number,
-        issue_comment_id: comment.id,
-        reviewer: login,
-        decided_at: comment.created_at,
-        marker,
-      };
-      const previous = change.approvals?.find(
-        (existing) =>
-          existing.artifact_id === artifactRef.id && existing.provider === 'github_issue',
-      );
-      if (
-        previous &&
-        previous.status === decision.status &&
-        previous.subject_hash === decision.subject_hash &&
-        previous.issue_number === decision.issue_number &&
-        previous.issue_comment_id === decision.issue_comment_id
-      )
-        return { status, decision: previous, already_ingested: true };
-      change.approvals = (change.approvals ?? []).filter(
-        (existing) => existing.artifact_id !== artifactRef.id,
-      );
-      change.approvals.push(decision);
-      await save(projectRoot, state, 'decision.ingest.issue', {
-        change_id: change.id,
-        artifact_id: artifactRef.id,
-        decision: status,
-        reviewer: login,
-        issue_number: input.issue_number,
-        issue_comment_id: comment.id,
-        subject_hash: subjectHash,
-      });
-      return { status, decision };
-    }
-    const { pull_request: pull } = await handlers['pr.refresh'](
-      { change_id: change.id },
-      { ...context, projectRoot },
-    );
-    requireValue(
-      pull.state === 'open',
-      'PR_CLOSED',
-      'A business decision requires an open pull request with a current reviewable head.',
-    );
-    requirePublishedDecisionSubject(projectRoot, pull.head_sha, artifactRef, subjectHash);
-    const { data, headers } = await githubRequest(
-      { ...context, projectRoot },
-      configuration,
-      repositoryEndpoint(configuration, `/pulls/${pull.number}/reviews?per_page=100`),
-    );
-    requireValue(
-      Array.isArray(data) && !headers.get('link')?.includes('rel="next"'),
-      'GITHUB_LIST_INCOMPLETE',
-      'GitHub did not return the complete review history; refusing to infer a business decision.',
-    );
-    const automation = new Set(automationLogins.map((login) => login.toLowerCase()));
-    const latestByReviewer = new Map();
-    for (const review of data) {
-      const login = review.user?.login;
-      const submitted = Date.parse(review.submitted_at);
-      if (typeof login !== 'string' || !Number.isFinite(submitted) || !Number.isInteger(review.id))
-        continue;
-      const key = login.toLowerCase();
-      const existing = latestByReviewer.get(key);
-      if (
-        !existing ||
-        submitted > existing.submitted ||
-        (submitted === existing.submitted && review.id > existing.review.id)
-      )
-        latestByReviewer.set(key, { review, submitted });
-    }
-    const latestDecision = [...latestByReviewer.entries()]
-      .filter(([login, item]) => {
-        const review = item.review;
-        return (
-          !automation.has(login) &&
-          review.user?.type === 'User' &&
-          review.commit_id === pull.head_sha &&
-          typeof review.body === 'string' &&
-          review.body.includes(marker) &&
-          ['APPROVED', 'CHANGES_REQUESTED'].includes(review.state)
-        );
-      })
-      .sort(
-        (left, right) =>
-          right[1].submitted - left[1].submitted || right[1].review.id - left[1].review.id,
-      )[0];
-    if (!latestDecision) {
-      let previousDecisionInvalidated = false;
-      const previous = change.approvals?.find((entry) => entry.artifact_id === artifactRef.id);
-      if (previous && previous.status !== 'SUPERSEDED') {
-        change.approvals = change.approvals.map((entry) =>
-          entry.artifact_id === artifactRef.id
-            ? {
-                ...entry,
-                status: 'SUPERSEDED',
-                superseded_at: new Date().toISOString(),
-                superseded_head_sha: pull.head_sha,
-              }
-            : entry,
-        );
-        await save(projectRoot, state, 'decision.supersede', {
-          change_id: change.id,
-          artifact_id: artifactRef.id,
-          subject_hash: subjectHash,
-          head_sha: pull.head_sha,
-        });
-        previousDecisionInvalidated = true;
-      }
-      return {
-        status: 'AWAITING_HUMAN',
-        artifact_id: artifactRef.id,
-        subject_hash: subjectHash,
-        head_sha: pull.head_sha,
-        pull_request_url: pull.url,
-        required_marker: marker,
-        message:
-          'An authenticated human must submit a GitHub pull request review containing this exact marker. Approve accepts the artifact; request changes rejects it.',
-        previous_decision_invalidated: previousDecisionInvalidated,
-      };
-    }
-    const [login, { review }] = latestDecision;
-    const status = review.state === 'APPROVED' ? 'APPROVED' : 'REJECTED';
-    const decision = {
-      id: `D-${artifactRef.id}`,
-      artifact_id: artifactRef.id,
-      subject_hash: subjectHash,
-      status,
-      provider: 'github',
-      pull_request_number: pull.number,
-      head_sha: pull.head_sha,
-      reviewer: login,
-      review_id: review.id,
-      decided_at: review.submitted_at,
-      marker,
-    };
-    const previous = change.approvals?.find((existing) => existing.artifact_id === artifactRef.id);
-    if (
-      previous &&
-      previous.status === decision.status &&
-      previous.subject_hash === decision.subject_hash &&
-      previous.head_sha === decision.head_sha &&
-      previous.review_id === decision.review_id
-    )
-      return { status, decision: previous, already_ingested: true };
-    change.approvals = (change.approvals ?? []).filter(
-      (existing) => existing.artifact_id !== artifactRef.id,
-    );
-    change.approvals.push(decision);
-    await save(projectRoot, state, 'decision.ingest', {
-      change_id: change.id,
-      artifact_id: artifactRef.id,
-      decision: status,
-      reviewer: login,
-      review_id: review.id,
-      head_sha: pull.head_sha,
-      subject_hash: subjectHash,
-    });
-    return { status, decision };
-  };
-
-  handlers['ci.await'] = async (input, context) => {
-    const timeoutMs = input.timeout_ms ?? 600_000;
-    const pollIntervalMs = input.poll_interval_ms ?? 5_000;
-    requireValue(
-      Number.isInteger(timeoutMs) && timeoutMs > 0 && timeoutMs <= 900_000,
-      'VALIDATION_FAILED',
-      'CI timeout_ms must be between 1 and 900000 milliseconds.',
-    );
-    requireValue(
-      Number.isInteger(pollIntervalMs) && pollIntervalMs > 0 && pollIntervalMs <= 30_000,
-      'VALIDATION_FAILED',
-      'CI poll_interval_ms must be between 1 and 30000 milliseconds.',
-    );
-    const started = performance.now();
-    let attempts = 0;
-    while (true) {
-      attempts += 1;
-      const inspection = await handlers['ci.inspect'](input, context);
-      if (inspection.all_passed)
-        return {
-          state: 'SUCCESS',
-          attempts,
-          head_sha: inspection.head_sha,
-          inspection,
-        };
-      const failedChecks = inspection.checks.filter((check) => check.state === 'FAILURE');
-      if (failedChecks.length)
-        throw new WorkflowError('CI_FAILED', 'A required pull request check failed.', {
-          attempts,
-          head_sha: inspection.head_sha,
-          failed_checks: failedChecks,
-        });
-      const remaining = timeoutMs - (performance.now() - started);
-      if (remaining <= 0)
-        throw new WorkflowError(
-          'CI_TIMEOUT',
-          'Required pull request checks did not pass before the timeout.',
-          {
-            attempts,
-            head_sha: inspection.head_sha,
-            checks: inspection.checks,
-          },
-        );
-      const sleep =
-        context.sleepImpl ??
-        ((milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)));
-      await sleep(Math.min(pollIntervalMs, remaining));
-    }
-  };
-
-  handlers['pr.mark_ready'] = async (input, { projectRoot, ...context }) => {
-    const { profile } = await load(projectRoot);
-    let { state } = await load(projectRoot);
-    let change = findChange(state, input.change_id);
-    const tasks = Object.values(change.tasks);
-    requireValue(
-      tasks.length > 0 &&
-        tasks.every((task) => task.state === 'DONE' && task.review?.status === 'ACCEPTED'),
-      'TASKS_INCOMPLETE',
-      'Every planned task must be complete with an accepted human review before marking the pull request ready.',
-    );
-    for (const task of tasks) {
-      const review = await handlers['review.resolve'](
-        { change_id: change.id, task_id: task.id },
-        { ...context, projectRoot },
-      );
-      requireValue(
-        review.task.state === 'DONE' && review.review.status === 'ACCEPTED',
-        'REVIEW_REQUIRED',
-        'A task review changed; resolve the latest human decision before marking the pull request ready.',
-      );
-    }
-    ({ state } = await load(projectRoot));
-    change = findChange(state, input.change_id);
-    const refreshed = await handlers['pr.refresh'](
-      { change_id: change.id },
-      { ...context, projectRoot },
-    );
-    requireValue(
-      refreshed.pull_request.state === 'open',
-      'PR_CLOSED',
-      'Only an open pull request can become ready for review.',
-    );
-    const ci = await handlers['ci.inspect']({ change_id: change.id }, { ...context, projectRoot });
-    requireValue(
-      ci.all_passed,
-      'CI_NOT_PASSING',
-      'Every required check must pass on the current pull request head before it can become ready.',
-    );
-    ({ state } = await load(projectRoot));
-    change = findChange(state, input.change_id);
-    let summary = change.pull_request;
-    requireValue(
-      summary?.head_sha === ci.head_sha,
-      'STALE_REVISION',
-      'The pull request changed while required checks were being inspected.',
-    );
-    let alreadyReady = !summary.draft;
-    if (!alreadyReady) {
-      const { data } = await githubRequest(
-        { ...context, projectRoot },
-        githubConfiguration(profile.github, context.env),
-        repositoryEndpoint(
-          githubConfiguration(profile.github, context.env),
-          `/pulls/${summary.number}/ready_for_review`,
-        ),
-        { method: 'POST', body: {} },
-      );
-      summary = validatePullRequest(
-        data,
-        change,
-        profile.repository.base_branch,
-        githubConfiguration(profile.github, context.env),
-      );
-      requireValue(
-        summary.state === 'open' && !summary.draft && summary.head_sha === ci.head_sha,
-        'STALE_REVISION',
-        'The pull request changed while it was being marked ready; refresh and revalidate it.',
-      );
-      change.pull_request = summary;
-      await save(projectRoot, state, 'pr.mark_ready', {
-        change_id: change.id,
-        pull_request_number: summary.number,
-        head_sha: summary.head_sha,
-      });
-    }
-    return { pull_request: summary, head_sha: ci.head_sha, ci, already_ready: alreadyReady };
-  };
-
   handlers['review.resolve'] = async (input, { projectRoot, ...context }) => {
     let { profile, state } = await load(projectRoot);
-    const configuration = githubConfiguration(profile.github, context.env);
     let change = findChange(state, input.change_id);
     let task = change.tasks[input.task_id];
+    if (
+      task?.state === 'DONE' &&
+      task.review?.status === 'ACCEPTED' &&
+      task.review?.provider === 'workflow_verification'
+    )
+      return { task, review: task.review, already_recorded: true };
+    const configuration = githubConfiguration(profile.github, context.env);
     if (task) {
       task.review_budget ??= 3;
       task.review_attempts ??= task.result?.review_attempt ?? 1;
@@ -1315,163 +818,51 @@ export function registerGithubOperations(handlers) {
     };
   };
 
-  handlers['change.squash_merge'] = async (input, { projectRoot, ...context }) => {
-    let profile;
+  handlers['change.confirm_merge'] = async (input, context) => {
+    const { projectRoot } = context;
     let { state } = await load(projectRoot);
     let change = findChange(state, input.change_id);
-    if (change.merge_receipt)
-      return { ...change.merge_receipt, merged: true, already_merged: true };
-    const tasks = Object.values(change.tasks);
+    if (
+      change.merge_receipt?.merge_method === 'user' ||
+      (change.merge_receipt?.merge_method === 'squash' && change.merge_receipt.recovered !== true)
+    )
+      return { ...change.merge_receipt, merged: true, already_confirmed: true };
     requireValue(
-      tasks.length > 0 &&
-        tasks.every((task) => task.state === 'DONE' && task.review?.status === 'ACCEPTED'),
-      'TASKS_INCOMPLETE',
-      'Every planned task must have an accepted human review before merge.',
+      change.pull_request?.number,
+      'PR_NOT_FOUND',
+      'Create the pull request before waiting for its manual merge.',
     );
-    for (const task of tasks) {
-      const review = await handlers['review.resolve'](
-        { change_id: change.id, task_id: task.id },
-        { ...context, projectRoot },
-      );
-      requireValue(
-        review.task.state === 'DONE' && review.review.status === 'ACCEPTED',
-        'REVIEW_REQUIRED',
-        'A task review changed; resolve the latest human decision before merging.',
-      );
-    }
-    ({ state } = await load(projectRoot));
-    change = findChange(state, input.change_id);
-    requireValue(
-      Object.values(change.tasks).every(
-        (task) => task.state === 'DONE' && task.review?.status === 'ACCEPTED',
-      ),
-      'TASKS_INCOMPLETE',
-      'Every planned task must remain complete with an accepted review before merge.',
-    );
-    let { pull_request: pull } = await handlers['pr.refresh'](
+    const { pull_request: pull } = await handlers['pr.refresh'](
       { change_id: change.id },
-      { ...context, projectRoot },
+      context,
     );
-    ({ profile, state } = await load(projectRoot));
-    change = findChange(state, input.change_id);
-    const approvedDecisions = (change.approvals ?? []).filter(
-      (entry) => entry.status === 'APPROVED',
-    );
-    const approval = approvedDecisions.find((entry) => entry.head_sha === pull.head_sha);
-    requireValue(
-      approval,
-      approvedDecisions.length > 0 ? 'DECISION_STALE' : 'DECISION_REQUIRED',
-      'A current authenticated business approval is required on the pull request head before merge.',
-    );
-    const artifactRef = change.artifacts.find((entry) => entry.id === approval.artifact_id);
-    requireValue(
-      artifactRef,
-      'DECISION_STALE',
-      'The approved decision subject is no longer registered.',
-    );
-    const artifact = await readJson(await safePath(projectRoot, artifactRef.path));
-    requireValue(
-      hash(artifact) === approval.subject_hash &&
-        artifactRef.content_hash === approval.subject_hash,
-      'DECISION_STALE',
-      'The approved business artifact changed after acceptance; obtain a current human decision.',
-    );
-    requirePublishedDecisionSubject(
-      projectRoot,
-      approval.head_sha,
-      artifactRef,
-      approval.subject_hash,
-    );
-    requireValue(
-      change.ci_checks?.all_passed === true && change.ci_checks.head_sha === approval.head_sha,
-      'CI_NOT_PASSING',
-      'Current passing CI evidence is required for the approved pull request head.',
-    );
-    requireValue(
-      pull.head_sha === approval.head_sha,
-      'DECISION_STALE',
-      'The business approval does not target the current pull request head.',
-    );
-    if (pull.state === 'closed' && pull.merged && pull.merge_commit_sha) {
-      const receipt = {
-        pull_request_number: pull.number,
-        head_sha: pull.head_sha,
-        merge_commit_sha: pull.merge_commit_sha,
-        merge_method: 'unknown',
-        merge_method_verified: false,
-        merged_at: new Date().toISOString(),
-        recovered: true,
-      };
-      ({ state } = await load(projectRoot));
-      change = findChange(state, input.change_id);
-      change.merge_receipt = receipt;
-      await save(projectRoot, state, 'change.squash_merge.recover', {
-        change_id: change.id,
-        pull_request_number: pull.number,
-        head_sha: pull.head_sha,
-        merge_commit_sha: pull.merge_commit_sha,
-      });
-      return { ...receipt, merged: true, already_merged: false };
-    }
-    requireValue(
-      pull.state === 'open' && !pull.draft,
-      'PR_NOT_READY',
-      'Only a ready, open pull request can be squash merged.',
-    );
-    const ci = await handlers['ci.inspect']({ change_id: change.id }, { ...context, projectRoot });
-    requireValue(
-      ci.all_passed && ci.head_sha === approval.head_sha,
-      'CI_NOT_PASSING',
-      'Every required check must pass on the exact approved pull request head before merge.',
-    );
-    const configuration = githubConfiguration(profile.github, context.env);
-    const merge = await githubRequest(
-      { ...context, projectRoot },
-      configuration,
-      repositoryEndpoint(configuration, `/pulls/${pull.number}/merge`),
-      {
-        method: 'PUT',
-        body: { merge_method: 'squash', sha: approval.head_sha },
-      },
-    );
-    requireValue(
-      merge.data?.merged === true &&
-        typeof merge.data.sha === 'string' &&
-        /^[a-f0-9]{40,64}$/i.test(merge.data.sha),
-      'MERGE_NOT_CONFIRMED',
-      'GitHub did not confirm a squash merge; no merge receipt was recorded.',
-    );
-    const refreshed = await handlers['pr.refresh'](
-      { change_id: change.id },
-      { ...context, projectRoot },
-    );
-    pull = refreshed.pull_request;
     requireValue(
       pull.state === 'closed' &&
         pull.merged &&
-        pull.head_sha === approval.head_sha &&
-        pull.merge_commit_sha === merge.data.sha,
-      'MERGE_NOT_CONFIRMED',
-      'The pull request state does not confirm the expected squash merge.',
+        /^[a-f0-9]{40,64}$/i.test(pull.merge_commit_sha ?? ''),
+      'MERGE_PENDING',
+      'The pull request has not been merged by the user yet. Wait for the manual merge and retry.',
+      { pull_request_number: pull.number, state: pull.state, merged: pull.merged },
     );
     ({ state } = await load(projectRoot));
     change = findChange(state, input.change_id);
     const receipt = {
       pull_request_number: pull.number,
-      head_sha: approval.head_sha,
-      merge_commit_sha: merge.data.sha,
-      merge_method: 'squash',
+      head_sha: pull.head_sha,
+      merge_commit_sha: pull.merge_commit_sha,
+      merge_method: 'user',
+      merge_method_verified: false,
       merged_at: new Date().toISOString(),
       recovered: false,
     };
     change.merge_receipt = receipt;
-    await save(projectRoot, state, 'change.squash_merge', {
+    await save(projectRoot, state, 'change.confirm_merge', {
       change_id: change.id,
       pull_request_number: pull.number,
-      head_sha: approval.head_sha,
-      merge_commit_sha: merge.data.sha,
+      head_sha: pull.head_sha,
+      merge_commit_sha: pull.merge_commit_sha,
     });
-    return { ...receipt, merged: true, already_merged: false };
+    return { ...receipt, merged: true, already_confirmed: false };
   };
 
   handlers['change.cleanup'] = async (input, context) => {

@@ -770,13 +770,6 @@ handlers['change.checkpoint'] = async (input, { projectRoot, ...context }) => {
   return { ...receipt, authorization_scope: 'local_checkpoint_primitive' };
 };
 
-handlers['decision.ingest'] = async () => {
-  throw new WorkflowError(
-    'UNTRUSTED_DECISION',
-    'Caller-supplied approval claims are not human evidence. Configure a verified external decision adapter.',
-  );
-};
-
 registerBundleOperations(handlers);
 
 export async function execute(request, context = {}) {

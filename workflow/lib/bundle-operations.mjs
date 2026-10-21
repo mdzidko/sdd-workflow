@@ -408,7 +408,7 @@ async function inspectInitializationTransition(projectRoot, change, state) {
   if (transition.next === 'COMPLETE') {
     const merge = change.merge_receipt;
     const merged =
-      merge?.merge_method === 'squash' &&
+      ['user', 'squash'].includes(merge?.merge_method) &&
       /^[a-f0-9]{40}$/i.test(merge.merge_commit_sha ?? '') &&
       /^[a-f0-9]{40}$/i.test(merge.head_sha ?? '') &&
       merge.recovered !== true;
@@ -417,7 +417,7 @@ async function inspectInitializationTransition(projectRoot, change, state) {
       from: change.stage,
       to: transition.next,
       ready: merged,
-      missing: merged ? [] : ['verified_squash_merge'],
+      missing: merged ? [] : ['manual_merge_confirmation'],
       evidence: merged ? [{ type: 'merge_receipt', sha: merge.merge_commit_sha }] : [],
       artifact_types: [],
       decision_artifact_types: [],
@@ -455,19 +455,15 @@ async function inspectInitializationTransition(projectRoot, change, state) {
     if (
       !decision ||
       decision.status !== 'APPROVED' ||
-      decision.provider !== 'github' ||
+      decision.provider !== 'codex_chat' ||
       decision.subject_hash !== contentHash ||
-      decision.head_sha !== change.pull_request?.head_sha ||
-      !Number.isInteger(decision.review_id) ||
       typeof decision.reviewer !== 'string'
     ) {
       missing.push({
         type,
         artifact_id: ref.id,
-        reason:
-          decision && decision.head_sha !== change.pull_request?.head_sha
-            ? 'authenticated_approval_stale'
-            : 'authenticated_approval_missing',
+        subject_hash: contentHash,
+        reason: decision?.status === 'REJECTED' ? 'user_rejected' : 'chat_approval_missing',
       });
       continue;
     }
@@ -476,7 +472,7 @@ async function inspectInitializationTransition(projectRoot, change, state) {
       artifact_id: ref.id,
       content_hash: contentHash,
       reviewer: decision.reviewer,
-      review_id: decision.review_id,
+      decided_at: decision.decided_at,
     });
   }
   return {
@@ -597,7 +593,7 @@ async function inspectFeatureTransition(projectRoot, change, state, validateSpec
   if (change.stage === 'INTEGRATION') {
     const merge = change.merge_receipt;
     const merged =
-      merge?.merge_method === 'squash' &&
+      ['user', 'squash'].includes(merge?.merge_method) &&
       /^[a-f0-9]{40}$/i.test(merge.merge_commit_sha ?? '') &&
       /^[a-f0-9]{40}$/i.test(merge.head_sha ?? '') &&
       merge.recovered !== true;
@@ -606,7 +602,7 @@ async function inspectFeatureTransition(projectRoot, change, state, validateSpec
       from: change.stage,
       to: transition.next,
       ready: merged,
-      missing: merged ? [] : ['verified_squash_merge'],
+      missing: merged ? [] : ['manual_merge_confirmation'],
       evidence: merged ? [{ type: 'merge_receipt', sha: merge.merge_commit_sha }] : [],
       artifact_types: [],
       decision_artifact_types: [],
@@ -739,19 +735,15 @@ async function inspectFeatureTransition(projectRoot, change, state, validateSpec
     if (
       !decision ||
       decision.status !== 'APPROVED' ||
-      decision.provider !== 'github' ||
+      decision.provider !== 'codex_chat' ||
       decision.subject_hash !== hash(artifact) ||
-      decision.head_sha !== change.pull_request?.head_sha ||
-      !Number.isInteger(decision.review_id) ||
       typeof decision.reviewer !== 'string'
     ) {
       missing.push({
         type,
         artifact_id: ref.id,
-        reason:
-          decision && decision.head_sha !== change.pull_request?.head_sha
-            ? 'authenticated_approval_stale'
-            : 'authenticated_approval_missing',
+        subject_hash: hash(artifact),
+        reason: decision?.status === 'REJECTED' ? 'user_rejected' : 'chat_approval_missing',
       });
       continue;
     }
@@ -760,7 +752,7 @@ async function inspectFeatureTransition(projectRoot, change, state, validateSpec
       artifact_id: ref.id,
       content_hash: hash(artifact),
       reviewer: decision.reviewer,
-      review_id: decision.review_id,
+      decided_at: decision.decided_at,
     });
   }
   return {
@@ -787,7 +779,7 @@ async function inspectBugfixTransition(projectRoot, change, state) {
   if (transition.next === 'COMPLETE') {
     const merge = change.merge_receipt;
     const merged =
-      merge?.merge_method === 'squash' &&
+      ['user', 'squash'].includes(merge?.merge_method) &&
       /^[a-f0-9]{40}$/i.test(merge.merge_commit_sha ?? '') &&
       /^[a-f0-9]{40}$/i.test(merge.head_sha ?? '') &&
       merge.recovered !== true;
@@ -796,7 +788,7 @@ async function inspectBugfixTransition(projectRoot, change, state) {
       from: change.stage,
       to: transition.next,
       ready: merged,
-      missing: merged ? [] : ['verified_squash_merge'],
+      missing: merged ? [] : ['manual_merge_confirmation'],
       evidence: merged ? [{ type: 'merge_receipt', sha: merge.merge_commit_sha }] : [],
       artifact_types: [],
       decision_artifact_types: [],
@@ -834,29 +826,19 @@ async function inspectBugfixTransition(projectRoot, change, state) {
       else {
         evidence.push({ type: ref.type, artifact_id: ref.id, content_hash: ref.content_hash });
         const decision = change.approvals.find((candidate) => candidate.artifact_id === ref.id);
-        const githubDecision =
-          decision?.provider === 'github' &&
-          decision.head_sha === change.pull_request?.head_sha &&
-          Number.isInteger(decision.review_id);
-        const issueDecision =
-          decision?.provider === 'github_issue' &&
-          ref.path.startsWith('.workflow-runtime/no-file-evidence/') &&
-          decision.issue_number === change.intent_issue_number &&
-          Number.isInteger(decision.issue_comment_id);
+        const chatDecision = decision?.provider === 'codex_chat';
         if (
           !decision ||
           decision.status !== 'APPROVED' ||
           decision.subject_hash !== contentHash ||
-          !(githubDecision || issueDecision) ||
+          !chatDecision ||
           typeof decision.reviewer !== 'string'
         ) {
           missing.push({
             type: ref.type,
             artifact_id: ref.id,
-            reason:
-              decision?.provider === 'github' && decision.head_sha !== change.pull_request?.head_sha
-                ? 'authenticated_approval_stale'
-                : 'authenticated_approval_missing',
+            subject_hash: contentHash,
+            reason: decision?.status === 'REJECTED' ? 'user_rejected' : 'chat_approval_missing',
           });
         } else {
           evidence.push({
@@ -865,9 +847,7 @@ async function inspectBugfixTransition(projectRoot, change, state) {
             content_hash: contentHash,
             provider: decision.provider,
             reviewer: decision.reviewer,
-            ...(decision.review_id ? { review_id: decision.review_id } : {}),
-            ...(decision.issue_number ? { issue_number: decision.issue_number } : {}),
-            ...(decision.issue_comment_id ? { issue_comment_id: decision.issue_comment_id } : {}),
+            decided_at: decision.decided_at,
           });
         }
       }
@@ -1077,7 +1057,7 @@ export function registerBundleOperations(handlers) {
         human_gates: [
           'product_acceptance',
           'architecture_acceptance',
-          'bootstrap_merge_acceptance',
+          'manual_pr_merge',
         ],
         no_file_completion: false,
       },
@@ -1090,11 +1070,11 @@ export function registerBundleOperations(handlers) {
           'Reproduce on the identified source revision and environment before implementation.',
           'If the target deployment already contains the fix, verify that exact deployment and close with evidence without an empty commit.',
           'Author and independently review a behavioral regression test that demonstrates RED before the fix.',
-          'Implement through the normal task checkpoints, verification, review, and human merge gates.',
+          'Implement through normal task checkpoints, verification, and task review; the user reviews and merges the PR manually.',
         ],
         human_gates: [
           'business_intent_acceptance_when_expected_behavior_is_not_already_approved',
-          'squash_merge_acceptance',
+          'manual_pr_merge',
         ],
         no_file_completion: true,
       },
@@ -1107,9 +1087,9 @@ export function registerBundleOperations(handlers) {
           'Obtain current human acceptance of the requirements and scenarios, then approve a scenario-covered incremental plan.',
           'Implement file-changing tasks with reviewed behavioral RED, current GREEN checks, and independently accepted task reviews; an explicit NO_FILE plan instead needs reviewed current GREEN evidence for both test-author and implementer tasks.',
           'Use the impact-selected verification schedule; unknown impact requires broader application and system checks.',
-          'Complete whole-change review, current CI, human merge acceptance, and squash merge. Retain evidence for verified no-ops and never create an empty commit.',
+          'Complete the planned checks and task reviews, then let the user review and merge the ready PR manually. Confirm the GitHub merge before completion. Retain evidence for verified no-ops and never create an empty commit.',
         ],
-        human_gates: ['scope_or_architecture_acceptance_if_changed', 'squash_merge_acceptance'],
+        human_gates: ['scope_or_architecture_acceptance_if_changed', 'manual_pr_merge'],
         no_file_completion: true,
       },
       FEATURE: {
@@ -1119,7 +1099,7 @@ export function registerBundleOperations(handlers) {
           'Specify and review requirements and scenarios, then obtain business acceptance.',
           'Plan and review small cross-application vertical increments before test authoring.',
         ],
-        human_gates: ['business_specification_acceptance', 'squash_merge_acceptance'],
+        human_gates: ['business_specification_acceptance', 'manual_pr_merge'],
         no_file_completion: false,
       },
       WORKFLOW_CHANGE: {
@@ -1127,11 +1107,12 @@ export function registerBundleOperations(handlers) {
         sequence: [
           'Pin and inspect the currently active workflow version.',
           'Specify, plan, test, and review the workflow change using the pinned version.',
-          'Evaluate and merge the candidate without activating it.',
+          'Evaluate the candidate and let the user review and merge its PR without activating it.',
           'Migrate existing changes only through a separately approved and verified migration.',
         ],
         human_gates: [
           'workflow_change_acceptance',
+          'manual_pr_merge',
           'explicit_activation',
           'migration_approval_when_required',
         ],
@@ -1684,10 +1665,8 @@ export function registerBundleOperations(handlers) {
         requireValue(
           acceptedTransition &&
             decision?.status === 'APPROVED' &&
-            decision.provider === 'github' &&
+            decision.provider === 'codex_chat' &&
             decision.subject_hash === ref.content_hash &&
-            decision.head_sha === change.pull_request?.head_sha &&
-            Number.isInteger(decision.review_id) &&
             typeof decision.reviewer === 'string',
           'GATE_BLOCKED',
           'Maintenance test selection requires the current human-approved impact map.',
@@ -2286,6 +2265,13 @@ export function registerBundleOperations(handlers) {
     }
     task.review_budget ??= 3;
     task.review_attempts ??= task.result?.review_attempt ?? 0;
+    if (
+      task.state === 'DONE' &&
+      task.result?.status === 'DONE' &&
+      task.result.checkpoint_sha === currentHead &&
+      hash(task.result.run_ids) === hash(input.run_ids)
+    )
+      return { task, accepted: true, already_recorded: true };
     requireValue(
       task.state === 'READY' ||
         task.state === 'WAITING_REVIEW' ||
@@ -2412,18 +2398,23 @@ export function registerBundleOperations(handlers) {
       'REVIEW_LIMIT_EXCEEDED',
       'The task exhausted its bounded review attempts and requires human escalation.',
     );
-    const reviewMarker = `<!-- codex-sdlc-review: change=${change.id} task=${task.id} result=${hash({ change_id: change.id, task_id: task.id, definition_hash: hash(task.definition), checkpoint_sha: checkpoint.commit_sha, run_ids: input.run_ids })} -->`;
     task.result = {
-      status: 'WAITING_REVIEW',
+      status: 'DONE',
       verification_mode: expectedRedRunIds.length > 0 ? 'EXPECTED_RED' : 'GREEN',
       expected_red_run_ids: expectedRedRunIds,
       review_attempt: task.review_attempts,
       run_ids: input.run_ids,
       checkpoint_sha: checkpoint.commit_sha,
-      review_marker: reviewMarker,
       at: new Date().toISOString(),
     };
-    task.state = 'WAITING_REVIEW';
+    task.review = {
+      status: 'ACCEPTED',
+      provider: 'workflow_verification',
+      reviewer: 'automated_checks',
+      result_hash: hash(task.result),
+      reviewed_at: task.result.at,
+    };
+    task.state = 'DONE';
     await save(projectRoot, state, 'task.record_result', {
       change_id: change.id,
       task_id: task.id,
@@ -2431,9 +2422,8 @@ export function registerBundleOperations(handlers) {
     });
     return {
       task,
-      accepted: false,
-      message:
-        'Evidence is recorded and awaits independent review. This local operation does not certify review acceptance or mark the task DONE.',
+      accepted: true,
+      message: 'Recorded verification and checkpoint evidence complete the task.',
     };
   };
 
@@ -2445,6 +2435,7 @@ export function registerBundleOperations(handlers) {
         change_id: change.id,
         kind: change.kind,
         stage: change.stage,
+        state_revision: state.revision,
         transition: await inspectInitializationTransition(projectRoot, change, state),
       };
     if (planDrivenKinds.has(change.kind))
@@ -2452,6 +2443,7 @@ export function registerBundleOperations(handlers) {
         change_id: change.id,
         kind: change.kind,
         stage: change.stage,
+        state_revision: state.revision,
         transition: await inspectFeatureTransition(projectRoot, change, state, (specification) =>
           handlers['spec.validate'](specification, { projectRoot }),
         ),
@@ -2461,15 +2453,82 @@ export function registerBundleOperations(handlers) {
         change_id: change.id,
         kind: change.kind,
         stage: change.stage,
+        state_revision: state.revision,
         transition: await inspectBugfixTransition(projectRoot, change, state),
       };
     return {
       change_id: change.id,
       kind: change.kind,
       stage: change.stage,
+      state_revision: state.revision,
       supported: false,
       reason: 'This change kind has no executable transition policy yet.',
     };
+  };
+
+  handlers['decision.accept'] = async (input, { projectRoot }) => {
+    requireValue(
+      input &&
+        Object.keys(input).every((key) =>
+          [
+            'change_id',
+            'artifact_id',
+            'decision',
+            'expected_revision',
+            'expected_content_hash',
+          ].includes(key),
+        ) &&
+        typeof input.change_id === 'string' &&
+        typeof input.artifact_id === 'string' &&
+        ['APPROVED', 'REJECTED'].includes(input.decision) &&
+        Number.isInteger(input.expected_revision) &&
+        typeof input.expected_content_hash === 'string',
+      'VALIDATION_FAILED',
+      'A chat decision requires the change, artifact, explicit decision, and inspected revision/content hash.',
+    );
+    const { state } = await load(projectRoot);
+    requireValue(
+      input.expected_revision === state.revision,
+      'STALE_REVISION',
+      'The workflow changed after this artifact was presented in chat. Re-present the current artifact before recording a decision.',
+    );
+    const change = findChange(state, input.change_id);
+    const ref = change.artifacts.find((artifact) => artifact.id === input.artifact_id);
+    requireValue(
+      ref,
+      'ARTIFACT_NOT_FOUND',
+      'The decision subject is not registered to this change.',
+    );
+    const artifact = await readJson(
+      await safePath(projectRoot, ref.path, {
+        protectedAccess: ref.path.startsWith('.workflow-runtime/'),
+      }),
+    );
+    const subjectHash = hash(artifact);
+    requireValue(
+      subjectHash === ref.content_hash && subjectHash === input.expected_content_hash,
+      'STALE_ARTIFACT',
+      'The artifact changed after it was presented in chat. Review and decide on the current content.',
+    );
+    const approval = {
+      artifact_id: ref.id,
+      status: input.decision,
+      provider: 'codex_chat',
+      reviewer: 'user',
+      subject_hash: subjectHash,
+      decided_at: new Date().toISOString(),
+    };
+    const existing = change.approvals.findIndex((entry) => entry.artifact_id === ref.id);
+    if (existing >= 0) change.approvals[existing] = approval;
+    else change.approvals.push(approval);
+    await save(projectRoot, state, 'decision.accept', {
+      change_id: change.id,
+      artifact_id: ref.id,
+      decision: input.decision,
+      subject_hash: subjectHash,
+      source: 'codex_chat',
+    });
+    return { change_id: change.id, artifact_id: ref.id, approval, state_revision: state.revision };
   };
 
   handlers['stage.advance'] = async (input, { projectRoot, ...context }) => {
@@ -2521,55 +2580,13 @@ export function registerBundleOperations(handlers) {
       change = findChange(state, input.change_id);
       gate = await inspectGate();
     }
-    if (change.kind === 'BUGFIX' && Number.isInteger(change.intent_issue_number)) {
-      const issueEvidence = [...change.artifacts]
-        .reverse()
-        .find(
-          (artifact) =>
-            artifact.type === 'defect-report' &&
-            artifact.path.startsWith('.workflow-runtime/no-file-evidence/'),
-        );
-      if (issueEvidence) {
-        await handlers['decision.ingest'](
-          {
-            change_id: change.id,
-            artifact_id: issueEvidence.id,
-            issue_number: change.intent_issue_number,
-          },
-          { ...context, projectRoot },
-        );
-        const refreshed = await load(projectRoot);
-        state = refreshed.state;
-        change = findChange(state, input.change_id);
-        gate = await inspectGate();
-      }
-    }
-    if (['BUGFIX', ...planDrivenKinds].includes(change.kind) && gate.review_task_ids?.length) {
-      for (const task_id of gate.review_task_ids) {
-        await handlers['review.resolve'](
-          { change_id: change.id, task_id },
-          { ...context, projectRoot },
-        );
-      }
-      const refreshed = await load(projectRoot);
-      state = refreshed.state;
-      change = findChange(state, input.change_id);
-      gate = await inspectGate();
-    }
-    const onlyApprovalEvidenceIsMissing =
-      gate.decision_artifact_types.length > 0 &&
-      gate.missing.every((item) =>
-        ['authenticated_approval_missing', 'authenticated_approval_stale'].includes(item.reason),
-      );
-    if (onlyApprovalEvidenceIsMissing && change.pull_request?.number) {
-      for (const type of gate.decision_artifact_types) {
-        const artifact = change.artifacts.filter((entry) => entry.type === type).at(-1);
-        if (artifact)
-          await handlers['decision.ingest'](
-            { change_id: change.id, artifact_id: artifact.id },
-            { ...context, projectRoot },
-          );
-      }
+    if (
+      input.to === 'COMPLETE' &&
+      change.pull_request?.number &&
+      gate.missing.length === 1 &&
+      gate.missing[0] === 'manual_merge_confirmation'
+    ) {
+      await handlers['change.confirm_merge']({ change_id: change.id }, { ...context, projectRoot });
       const refreshed = await load(projectRoot);
       state = refreshed.state;
       change = findChange(state, input.change_id);
@@ -2578,7 +2595,7 @@ export function registerBundleOperations(handlers) {
     if (!gate.ready)
       throw new WorkflowError(
         'GATE_BLOCKED',
-        'Stage prerequisites are not satisfied. Complete the listed artifacts, current content validation, authenticated human decisions, or merge prerequisite first.',
+        'Stage prerequisites are not satisfied. Complete the listed artifacts and validation, record chat approvals, or wait for the user to merge the pull request.',
         { gate },
       );
     const transition = {
