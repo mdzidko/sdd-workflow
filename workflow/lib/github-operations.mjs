@@ -20,6 +20,7 @@ function hasReviewedRedEvidence(change, task, state) {
     testAuthorRoles.has(task?.role) &&
     task.state === 'DONE' &&
     task.review?.status === 'ACCEPTED' &&
+    task.review?.provider === 'workflow_verification' &&
     task.result?.verification_mode === 'EXPECTED_RED' &&
     Array.isArray(runIds) &&
     runIds.length > 0 &&
@@ -406,6 +407,47 @@ export function registerGithubOperations(handlers) {
       all_passed: inspection.all_passed,
     });
     return inspection;
+  };
+
+  handlers['ci.await'] = async (input, context) => {
+    const timeoutMs = input.timeout_ms ?? 600_000;
+    const pollIntervalMs = input.poll_interval_ms ?? 5_000;
+    requireValue(
+      Number.isInteger(timeoutMs) && timeoutMs > 0 && timeoutMs <= 900_000,
+      'VALIDATION_FAILED',
+      'CI timeout_ms must be between 1 and 900000 milliseconds.',
+    );
+    requireValue(
+      Number.isInteger(pollIntervalMs) && pollIntervalMs > 0 && pollIntervalMs <= 30_000,
+      'VALIDATION_FAILED',
+      'CI poll_interval_ms must be between 1 and 30000 milliseconds.',
+    );
+    const started = performance.now();
+    let attempts = 0;
+    while (true) {
+      attempts += 1;
+      const inspection = await handlers['ci.inspect'](input, context);
+      if (inspection.all_passed)
+        return { state: 'SUCCESS', attempts, head_sha: inspection.head_sha, inspection };
+      const failedChecks = inspection.checks.filter((check) => check.state === 'FAILURE');
+      if (failedChecks.length)
+        throw new WorkflowError('CI_FAILED', 'A required pull request check failed.', {
+          attempts,
+          head_sha: inspection.head_sha,
+          failed_checks: failedChecks,
+        });
+      const remaining = timeoutMs - (performance.now() - started);
+      if (remaining <= 0)
+        throw new WorkflowError(
+          'CI_TIMEOUT',
+          'Required pull request checks did not pass before the timeout.',
+          { attempts, head_sha: inspection.head_sha, checks: inspection.checks },
+        );
+      const sleep =
+        context.sleepImpl ??
+        ((milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds)));
+      await sleep(Math.min(pollIntervalMs, remaining));
+    }
   };
 
   handlers['evaluation.ingest'] = async (input, context) => {

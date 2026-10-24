@@ -131,7 +131,7 @@ test('a defect report with no reproduction steps is rejected by the bugfix stage
   assert.ok(inspected.transition.missing.some((item) => item.reason === 'artifact_invalid'));
 });
 
-test('a reproduced RED regression test with current human review advances a bugfix to implementation', async (t) => {
+test('a reproduced RED regression test and chat acceptance advance a bugfix to implementation', async (t) => {
   let pull;
   let headSha;
   let headRef;
@@ -145,7 +145,7 @@ test('a reproduced RED regression test with current human review advances a bugf
         number: 42,
         html_url: 'https://github.example.test/example-org/project-x/pull/42',
         state: 'open',
-        draft: true,
+        draft: false,
         head: { ref: headRef, sha: headSha, repo: { full_name: 'example-org/project-x' } },
         base: { ref: 'main', sha: 'base-sha', repo: { full_name: 'example-org/project-x' } },
         user: { login: 'change-author', type: 'User' },
@@ -303,16 +303,6 @@ test('a reproduced RED regression test with current human review advances a bugf
     }),
     'task.record_result',
   );
-  const currentMarker = result.task.result.review_marker;
-  reviews.push({
-    id: 42,
-    user: { login: 'human-reviewer', type: 'User' },
-    state: 'CHANGES_REQUESTED',
-    commit_id: headSha,
-    submitted_at: nextReviewTimestamp(),
-    body: currentMarker,
-  });
-
   let state = succeeds(await repo.run('workflow.inspect'), 'workflow.inspect');
   fails(
     await repo.run('stage.advance', {
@@ -335,47 +325,11 @@ test('a reproduced RED regression test with current human review advances a bugf
       ),
     ),
   );
-  reviews.push({
-    id: 43,
-    user: { login: 'human-reviewer', type: 'User' },
-    state: 'APPROVED',
-    commit_id: headSha,
-    submitted_at: nextReviewTimestamp(),
-    body: currentMarker,
-  });
-
-  const pendingIntent = succeeds(
-    await repo.run('decision.ingest', { change_id: 'B-002', artifact_id: 'DEFECT-002' }),
-    'decision.ingest',
+  const intent = succeeds(
+    await repo.accept('B-002', 'DEFECT-002'),
+    'decision.accept',
   );
-  assert.equal(pendingIntent.status, 'AWAITING_HUMAN');
-  reviews.push({
-    id: 46,
-    user: { login: 'human-reviewer', type: 'User' },
-    state: 'CHANGES_REQUESTED',
-    commit_id: headSha,
-    submitted_at: nextReviewTimestamp(),
-    body: pendingIntent.required_marker,
-  });
-  state = succeeds(await repo.run('workflow.inspect'), 'workflow.inspect');
-  fails(
-    await repo.run('stage.advance', {
-      change_id: 'B-002',
-      expected_stage: 'REPRODUCTION',
-      expected_revision: state.revision,
-      to: 'IMPLEMENTATION',
-    }),
-    'stage.advance',
-    'GATE_BLOCKED',
-  );
-  reviews.push({
-    id: 47,
-    user: { login: 'human-reviewer', type: 'User' },
-    state: 'APPROVED',
-    commit_id: headSha,
-    submitted_at: nextReviewTimestamp(),
-    body: pendingIntent.required_marker,
-  });
+  assert.equal(intent.approval.status, 'APPROVED');
   state = succeeds(await repo.run('workflow.inspect'), 'workflow.inspect');
   const advanced = succeeds(
     await repo.run('stage.advance', {
@@ -387,7 +341,7 @@ test('a reproduced RED regression test with current human review advances a bugf
     'stage.advance',
   );
   assert.equal(advanced.change.stage, 'IMPLEMENTATION');
-  assert.ok(advanced.transition.evidence.some((item) => item.type === 'reviewed_red_test'));
+  assert.ok(advanced.transition.evidence.some((item) => item.type === 'verified_red_test'));
   assert.ok(advanced.transition.evidence.some((item) => item.type === 'authenticated_decision'));
   fails(
     await repo.run('task.prepare', {
@@ -454,20 +408,7 @@ test('a reproduced RED regression test with current human review advances a bugf
     }),
     'task.record_result',
   );
-  assert.equal(implementationResult.task.state, 'WAITING_REVIEW');
-  reviews.push({
-    id: 44,
-    user: { login: 'human-reviewer', type: 'User' },
-    state: 'APPROVED',
-    commit_id: headSha,
-    submitted_at: nextReviewTimestamp(),
-    body: implementationResult.task.result.review_marker,
-  });
-  const implementationReview = succeeds(
-    await repo.run('review.resolve', { change_id: 'B-002', task_id: 'T-IMPLEMENT' }),
-    'review.resolve',
-  );
-  assert.equal(implementationReview.task.state, 'DONE');
+  assert.equal(implementationResult.task.state, 'DONE');
 
   const completion = succeeds(
     await repo.run('stage.inspect', { change_id: 'B-002' }),
@@ -475,34 +416,16 @@ test('a reproduced RED regression test with current human review advances a bugf
   );
   assert.equal(completion.transition.to, 'COMPLETE');
   assert.equal(completion.transition.ready, false);
-  assert.deepEqual(completion.transition.missing, ['verified_squash_merge']);
-  const pendingDecision = succeeds(
-    await repo.run('decision.ingest', { change_id: 'B-002', artifact_id: 'DEFECT-002' }),
-    'decision.ingest',
-  );
-  assert.equal(pendingDecision.status, 'AWAITING_HUMAN');
-  reviews.push({
-    id: 45,
-    user: { login: 'human-reviewer', type: 'User' },
-    state: 'APPROVED',
-    commit_id: headSha,
-    submitted_at: nextReviewTimestamp(),
-    body: pendingDecision.required_marker,
-  });
-  const decision = succeeds(
-    await repo.run('decision.ingest', { change_id: 'B-002', artifact_id: 'DEFECT-002' }),
-    'decision.ingest',
-  );
-  assert.equal(decision.status, 'APPROVED');
-  const ready = succeeds(await repo.run('pr.mark_ready', { change_id: 'B-002' }), 'pr.mark_ready');
-  assert.equal(ready.head_sha, headSha);
-  assert.equal(ready.ci.all_passed, true);
+  assert.deepEqual(completion.transition.missing, ['manual_merge_confirmation']);
+  pull.state = 'closed';
+  pull.merged = true;
+  pull.merge_commit_sha = 'e'.repeat(40);
   const merged = succeeds(
-    await repo.run('change.squash_merge', { change_id: 'B-002' }),
-    'change.squash_merge',
+    await repo.run('change.confirm_merge', { change_id: 'B-002' }),
+    'change.confirm_merge',
   );
   assert.equal(merged.merged, true);
-  assert.equal(merged.merge_method, 'squash');
+  assert.equal(merged.merge_method, 'user');
   assert.equal(merged.merge_commit_sha, 'e'.repeat(40));
   const verifiedCompletion = succeeds(
     await repo.run('stage.inspect', { change_id: 'B-002' }),

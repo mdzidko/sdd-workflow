@@ -172,27 +172,10 @@ test('local deployment uses exact digests, waits for healthy services, verifies 
   assert.equal(repeated.already_ready, true);
 });
 
-test('a bug report with no-file evidence still requires authenticated intent approval', async (t) => {
+test('a bug report with verified no-file evidence requires chat acceptance', async (t) => {
   const docker = composeRunner();
-  const comments = [];
-  const fetchImpl = async (url) => {
-    const parsed = new URL(String(url));
-    if (parsed.pathname.endsWith('/issues/314'))
-      return response({
-        number: 314,
-        state: 'open',
-        body: '<!-- codex-sdlc-change: B-FIXED -->',
-        user: { login: 'reporter', type: 'User' },
-      });
-    if (parsed.pathname.endsWith('/issues/314/comments')) return response(comments);
-    throw new Error(`Unexpected GitHub API request: ${url}`);
-  };
   const repo = await configuredRepository(t, docker, {
     github,
-    context: {
-      env: { GH_TOKEN: 'fixture-token', GITHUB_API_URL: github.api_url },
-      fetchImpl,
-    },
   });
   succeeds(
     await repo.run('deploy.local', {
@@ -275,38 +258,15 @@ test('a bug report with no-file evidence still requires authenticated intent app
   assert.equal(gate.transition.to, 'COMPLETE');
   assert.equal(gate.transition.ready, false);
   assert.ok(
-    gate.transition.missing.some((item) => item.reason === 'authenticated_approval_missing'),
+    gate.transition.missing.some((item) => item.reason === 'chat_approval_missing'),
   );
   assert.ok(
     gate.transition.evidence.some(
       (item) => item.type === 'verified_no_file_deployment' && item.deployment_id === 'D-FIXED',
     ),
   );
-  const pendingDecision = succeeds(
-    await repo.run('decision.ingest', {
-      change_id: 'B-FIXED',
-      artifact_id: 'DEFECT-FIXED',
-      issue_number: 314,
-    }),
-    'decision.ingest',
-  );
-  assert.equal(pendingDecision.status, 'AWAITING_HUMAN');
-  assert.equal(pendingDecision.issue_number, 314);
-  comments.push({
-    id: 1,
-    user: { login: 'human-reviewer', type: 'User' },
-    created_at: '2026-10-20T10:00:00.000Z',
-    body: `CHANGES_REQUESTED ${pendingDecision.required_marker}`,
-  });
-  const rejected = succeeds(
-    await repo.run('decision.ingest', {
-      change_id: 'B-FIXED',
-      artifact_id: 'DEFECT-FIXED',
-      issue_number: 314,
-    }),
-    'decision.ingest',
-  );
-  assert.equal(rejected.status, 'REJECTED');
+  const rejected = succeeds(await repo.accept('B-FIXED', 'DEFECT-FIXED', 'REJECTED'), 'decision.accept');
+  assert.equal(rejected.approval.status, 'REJECTED');
   const inspected = succeeds(await repo.run('workflow.inspect'), 'workflow.inspect');
   fails(
     await repo.run('stage.advance', {
@@ -318,58 +278,15 @@ test('a bug report with no-file evidence still requires authenticated intent app
     'stage.advance',
     'GATE_BLOCKED',
   );
-  comments.push({
-    id: 2,
-    user: { login: 'human-reviewer', type: 'User' },
-    created_at: '2026-10-20T10:01:00.000Z',
-    body: `APPROVED ${pendingDecision.required_marker}`,
-  });
-  const approved = succeeds(
-    await repo.run('decision.ingest', {
-      change_id: 'B-FIXED',
-      artifact_id: 'DEFECT-FIXED',
-      issue_number: 314,
-    }),
-    'decision.ingest',
-  );
-  assert.equal(approved.status, 'APPROVED');
-  comments.push({
-    id: 3,
-    user: { login: 'human-reviewer', type: 'User' },
-    created_at: '2026-10-20T10:02:00.000Z',
-    body: `CHANGES_REQUESTED ${pendingDecision.required_marker}`,
-  });
+  const approved = succeeds(await repo.accept('B-FIXED', 'DEFECT-FIXED'), 'decision.accept');
+  assert.equal(approved.approval.status, 'APPROVED');
   const finalGate = succeeds(
     await repo.run('stage.inspect', { change_id: 'B-FIXED' }),
     'stage.inspect',
   );
   assert.equal(finalGate.transition.ready, true);
   const finalState = succeeds(await repo.run('workflow.inspect'), 'workflow.inspect');
-  fails(
-    await repo.run('stage.advance', {
-      change_id: 'B-FIXED',
-      expected_stage: 'REPRODUCTION',
-      expected_revision: finalState.revision,
-      to: 'COMPLETE',
-    }),
-    'stage.advance',
-    'GATE_BLOCKED',
-  );
-  comments.push({
-    id: 4,
-    user: { login: 'human-reviewer', type: 'User' },
-    created_at: '2026-10-20T10:03:00.000Z',
-    body: `APPROVED ${pendingDecision.required_marker}`,
-  });
-  const reapproved = succeeds(
-    await repo.run('decision.ingest', {
-      change_id: 'B-FIXED',
-      artifact_id: 'DEFECT-FIXED',
-      issue_number: 314,
-    }),
-    'decision.ingest',
-  );
-  assert.equal(reapproved.status, 'APPROVED');
+  assert.equal(finalState.changes.find((change) => change.id === 'B-FIXED').approvals[0].status, 'APPROVED');
   const approvedState = succeeds(await repo.run('workflow.inspect'), 'workflow.inspect');
   const completed = succeeds(
     await repo.run('stage.advance', {

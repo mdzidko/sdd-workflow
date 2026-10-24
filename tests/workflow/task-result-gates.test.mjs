@@ -66,7 +66,7 @@ async function preparedTask(t, { push = true, checkpointTask = true } = {}) {
   return { repo, prepared: prepared.task, run, checkpoint };
 }
 
-test('a task result becomes review-ready only after fresh verification and its pushed scoped checkpoint', async (t) => {
+test('a task completes only after fresh verification and its pushed scoped checkpoint', async (t) => {
   const { repo, run, checkpoint } = await preparedTask(t);
   const recorded = succeeds(
     await repo.run('task.record_result', {
@@ -77,11 +77,12 @@ test('a task result becomes review-ready only after fresh verification and its p
     'task.record_result',
   );
 
-  assert.equal(recorded.task.state, 'WAITING_REVIEW');
-  assert.equal(recorded.task.result.status, 'WAITING_REVIEW');
+  assert.equal(recorded.task.state, 'DONE');
+  assert.equal(recorded.task.result.status, 'DONE');
   assert.equal(recorded.task.result.checkpoint_sha, checkpoint.commit_sha);
   assert.deepEqual(recorded.task.result.run_ids, [run.id]);
-  assert.notEqual(recorded.task.state, 'DONE');
+  assert.equal(recorded.task.review.provider, 'workflow_verification');
+  assert.equal('review_marker' in recorded.task.result, false);
   const retry = succeeds(
     await repo.run('task.record_result', {
       change_id: 'F-001',
@@ -93,7 +94,7 @@ test('a task result becomes review-ready only after fresh verification and its p
   assert.equal(retry.already_recorded, true);
 });
 
-test('a passing test run without a matching committed checkpoint cannot advance task review', async (t) => {
+test('a passing test run without a matching committed checkpoint cannot complete a task', async (t) => {
   const { repo, run } = await preparedTask(t, { checkpointTask: false });
   fails(
     await repo.run('task.record_result', {
@@ -106,7 +107,7 @@ test('a passing test run without a matching committed checkpoint cannot advance 
   );
 });
 
-test('a local-only checkpoint remains pending and cannot make the task review-ready', async (t) => {
+test('a local-only checkpoint remains pending and cannot complete the task', async (t) => {
   const { repo, run } = await preparedTask(t, { push: false });
   fails(
     await repo.run('task.record_result', {

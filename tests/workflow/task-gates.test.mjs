@@ -173,7 +173,11 @@ async function preparedNoFileMaintenance(t, outcome = 'NO_FILE') {
     ...taskAuthor,
     definition: taskAuthor,
     state: 'DONE',
-    review: { status: 'ACCEPTED', reviewer: 'fixture-reviewer' },
+    review: {
+      status: 'ACCEPTED',
+      provider: 'workflow_verification',
+      reviewer: 'automated_checks',
+    },
     result: { verification_mode: 'GREEN', run_ids: [run.id] },
   };
   await repo.write('.workflow/state.json', `${JSON.stringify(state, null, 2)}\n`);
@@ -200,7 +204,7 @@ async function preparedNoFileMaintenanceWithReviews(t) {
         number: 42,
         html_url: 'https://github.example.test/example-org/project-x/pull/42',
         state: 'open',
-        draft: true,
+        draft: false,
         head: {
           ref: headRef,
           sha: headSha,
@@ -409,6 +413,11 @@ async function preparedNoFileMaintenanceWithReviews(t) {
     implementer,
     headSha,
     reviews,
+    confirmUserMerge() {
+      pull.state = 'closed';
+      pull.merged = true;
+      pull.merge_commit_sha = 'c'.repeat(40);
+    },
     approve(task) {
       reviews.push({
         id: reviews.length + 1,
@@ -501,8 +510,8 @@ test('a reviewed no-file maintenance plan accepts GREEN verification and records
   assert.deepEqual(increment.missing, []);
 });
 
-test('a no-file maintenance increment requires current human review for both GREEN tasks', async (t) => {
-  const { repo, taskAuthor, implementer, reviews, approve, headSha } =
+test('a no-file maintenance increment requires current GREEN evidence for both tasks', async (t) => {
+  const { repo, taskAuthor, implementer, headSha } =
     await preparedNoFileMaintenanceWithReviews(t);
 
   const preparedTest = succeeds(
@@ -536,18 +545,8 @@ test('a no-file maintenance increment requires current human review for both GRE
     }),
     'task.record_result',
   );
-  assert.equal(testResult.task.state, 'WAITING_REVIEW');
+  assert.equal(testResult.task.state, 'DONE');
   assert.equal(testResult.task.result.verification_mode, 'GREEN');
-  approve(testResult.task);
-  const acceptedTest = succeeds(
-    await repo.run('review.resolve', {
-      change_id: 'M-REVIEWED-NO-FILE',
-      task_id: taskAuthor.id,
-    }),
-    'review.resolve',
-  );
-  assert.equal(acceptedTest.task.state, 'DONE');
-  assert.equal(acceptedTest.review.head_sha, headSha);
 
   const preparedImplementation = succeeds(
     await repo.run('task.prepare', {
@@ -582,28 +581,9 @@ test('a no-file maintenance increment requires current human review for both GRE
     }),
     'task.record_result',
   );
-  assert.equal(implementationResult.task.state, 'WAITING_REVIEW');
+  assert.equal(implementationResult.task.state, 'DONE');
   assert.equal(implementationResult.task.result.verification_mode, 'GREEN');
-  const awaitingImplementationReview = succeeds(
-    await repo.run('increment.inspect', { change_id: 'M-REVIEWED-NO-FILE' }),
-    'increment.inspect',
-  );
-  assert.equal(awaitingImplementationReview.ready, false);
-  assert.ok(
-    awaitingImplementationReview.missing.some((item) => item.reason === 'task_review_incomplete'),
-  );
-
-  approve(implementationResult.task);
-  const acceptedImplementation = succeeds(
-    await repo.run('review.resolve', {
-      change_id: 'M-REVIEWED-NO-FILE',
-      task_id: implementer.id,
-    }),
-    'review.resolve',
-  );
-  assert.equal(acceptedImplementation.task.state, 'DONE');
-  assert.equal(acceptedImplementation.review.head_sha, headSha);
-  assert.equal(reviews.length, 3);
+  assert.equal(implementationResult.task.review.provider, 'workflow_verification');
   const increment = succeeds(
     await repo.run('increment.inspect', { change_id: 'M-REVIEWED-NO-FILE' }),
     'increment.inspect',
@@ -612,8 +592,8 @@ test('a no-file maintenance increment requires current human review for both GRE
   assert.deepEqual(increment.missing, []);
 });
 
-test('a reviewed no-file maintenance increment reaches squash merge without an empty commit', async (t) => {
-  const { repo, taskAuthor, implementer, reviews, approve, approveDecision, headSha } =
+test('a chat-approved no-file maintenance increment waits for the user to merge without an empty commit', async (t) => {
+  const { repo, taskAuthor, implementer, confirmUserMerge, headSha } =
     await preparedNoFileMaintenanceWithReviews(t);
 
   for (const task of [taskAuthor, implementer]) {
@@ -648,14 +628,7 @@ test('a reviewed no-file maintenance increment reaches squash merge without an e
       'task.record_result',
     );
     assert.equal(result.task.result.verification_mode, 'GREEN');
-    approve(result.task);
-    succeeds(
-      await repo.run('review.resolve', {
-        change_id: 'M-REVIEWED-NO-FILE',
-        task_id: task.id,
-      }),
-      'review.resolve',
-    );
+    assert.equal(result.task.state, 'DONE');
   }
 
   const inspected = succeeds(
@@ -685,39 +658,26 @@ test('a reviewed no-file maintenance increment reaches squash merge without an e
     'stage.advance',
   );
 
-  const pendingDecision = succeeds(
-    await repo.run('decision.ingest', {
-      change_id: 'M-REVIEWED-NO-FILE',
-      artifact_id: 'PLAN-NO-FILE',
-    }),
-    'decision.ingest',
-  );
-  assert.equal(pendingDecision.status, 'AWAITING_HUMAN');
-  approveDecision(pendingDecision.required_marker);
   const decision = succeeds(
-    await repo.run('decision.ingest', {
-      change_id: 'M-REVIEWED-NO-FILE',
-      artifact_id: 'PLAN-NO-FILE',
-    }),
-    'decision.ingest',
+    await repo.accept('M-REVIEWED-NO-FILE', 'PLAN-NO-FILE'),
+    'decision.accept',
   );
-  assert.equal(decision.status, 'APPROVED');
-  const ready = succeeds(
-    await repo.run('pr.mark_ready', { change_id: 'M-REVIEWED-NO-FILE' }),
-    'pr.mark_ready',
+  assert.equal(decision.approval.status, 'APPROVED');
+  assert.equal((await repo.run('pr.ensure', { change_id: 'M-REVIEWED-NO-FILE' })).data.pull_request.draft, false);
+  const pendingMerge = fails(
+    await repo.run('change.confirm_merge', { change_id: 'M-REVIEWED-NO-FILE' }),
+    'change.confirm_merge',
+    'MERGE_PENDING',
   );
-  assert.equal(ready.ci.all_passed, true);
-  assert.equal(ready.head_sha, headSha);
-
+  assert.match(pendingMerge.message, /has not been merged/i);
+  confirmUserMerge();
   const merged = succeeds(
-    await repo.run('change.squash_merge', { change_id: 'M-REVIEWED-NO-FILE' }),
-    'change.squash_merge',
+    await repo.run('change.confirm_merge', { change_id: 'M-REVIEWED-NO-FILE' }),
+    'change.confirm_merge',
   );
   assert.equal(merged.merged, true);
-  assert.equal(merged.merge_method, 'squash');
+  assert.equal(merged.merge_method, 'user');
   assert.equal(merged.head_sha, headSha);
-  assert.equal(merged.merge_commit_sha, 'c'.repeat(40));
-  assert.equal(reviews.length, 4);
   const complete = succeeds(
     await repo.run('stage.inspect', { change_id: 'M-REVIEWED-NO-FILE' }),
     'stage.inspect',
@@ -735,7 +695,7 @@ test('a normal maintenance plan cannot use GREEN-only evidence to bypass TDD', a
   );
 });
 
-test('a test-author task can submit only evidenced behavioral RED for independent review', async (t) => {
+test('a test-author task completes automatically only with evidenced behavioral RED', async (t) => {
   const { repo, run } = await preparedRedTest(t);
   assert.equal(run.classification, 'ASSERTION_FAILURE');
   assert.equal(run.failed_tests.length, 1);
@@ -785,10 +745,10 @@ test('a test-author task can submit only evidenced behavioral RED for independen
     }),
     'task.record_result',
   );
-  assert.equal(result.task.state, 'WAITING_REVIEW');
+  assert.equal(result.task.state, 'DONE');
   assert.equal(result.task.result.verification_mode, 'EXPECTED_RED');
   assert.deepEqual(result.task.result.expected_red_run_ids, [run.id]);
-  assert.notEqual(result.task.state, 'DONE');
+  assert.equal(result.task.review.provider, 'workflow_verification');
 });
 
 test('task ownership cannot escape the target repository', async (t) => {

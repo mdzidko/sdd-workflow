@@ -6,8 +6,8 @@ import { initialize, repository, stateBytes, succeeds } from './helpers.mjs';
 const routeExpectations = [
   ['PROJECT_INIT', 'initialization', ['product_acceptance', 'architecture_acceptance']],
   ['FEATURE', 'feature', ['business_specification_acceptance']],
-  ['BUGFIX', 'defect', ['squash_merge_acceptance']],
-  ['MAINTENANCE', 'maintenance', ['squash_merge_acceptance']],
+  ['BUGFIX', 'defect', ['manual_pr_merge']],
+  ['MAINTENANCE', 'maintenance', ['manual_pr_merge']],
   ['WORKFLOW_CHANGE', 'workflow_change', ['explicit_activation']],
 ];
 

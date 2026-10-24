@@ -146,6 +146,7 @@ function hasReviewedRedEvidence(change, task, state) {
     testAuthorRoles.has(task?.role) &&
     task.state === 'DONE' &&
     task.review?.status === 'ACCEPTED' &&
+    task.review?.provider === 'workflow_verification' &&
     task.result?.verification_mode === 'EXPECTED_RED' &&
     Array.isArray(runIds) &&
     runIds.length > 0 &&
@@ -167,6 +168,7 @@ function hasReviewedGreenEvidence(change, task, state) {
     testAuthorRoles.has(task?.role) &&
     task.state === 'DONE' &&
     task.review?.status === 'ACCEPTED' &&
+    task.review?.provider === 'workflow_verification' &&
     task.result?.verification_mode === 'GREEN' &&
     Array.isArray(runIds) &&
     runIds.length > 0 &&
@@ -888,10 +890,13 @@ async function inspectBugfixTransition(projectRoot, change, state) {
       task.result.expected_red_run_ids.length > 0,
   );
   const acceptedTest = testTasks.find((task) => {
-    if (task.state !== 'DONE' || task.review?.status !== 'ACCEPTED') return false;
     if (
-      task.review.head_sha !== task.result.checkpoint_sha ||
-      task.review.head_sha !== change.pull_request?.head_sha ||
+      task.state !== 'DONE' ||
+      task.review?.status !== 'ACCEPTED' ||
+      task.review?.provider !== 'workflow_verification'
+    )
+      return false;
+    if (
       !task.result.expected_red_run_ids.every((runId) => task.result.run_ids.includes(runId))
     )
       return false;
@@ -910,11 +915,10 @@ async function inspectBugfixTransition(projectRoot, change, state) {
     });
   else
     evidence.push({
-      type: 'reviewed_red_test',
+      type: 'verified_red_test',
       task_id: acceptedTest.id,
       checkpoint_sha: acceptedTest.result.checkpoint_sha,
-      reviewer: acceptedTest.review.reviewer,
-      review_id: acceptedTest.review.review_id,
+      verification_provider: acceptedTest.review.provider,
       run_ids: acceptedTest.result.expected_red_run_ids,
     });
   const reviewCandidate =
@@ -1069,8 +1073,8 @@ export function registerBundleOperations(handlers) {
           'Record expected and observed behavior, environment, impact, and reproduction steps.',
           'Reproduce on the identified source revision and environment before implementation.',
           'If the target deployment already contains the fix, verify that exact deployment and close with evidence without an empty commit.',
-          'Author and independently review a behavioral regression test that demonstrates RED before the fix.',
-          'Implement through normal task checkpoints, verification, and task review; the user reviews and merges the PR manually.',
+          'Author a behavioral regression test and verify its assertion failure against the unfixed behavior before implementation.',
+          'Implement through task checkpoints and current verification; the user accepts business decisions in chat and merges the PR manually.',
         ],
         human_gates: [
           'business_intent_acceptance_when_expected_behavior_is_not_already_approved',
@@ -1084,10 +1088,10 @@ export function registerBundleOperations(handlers) {
           'Classify the requested maintenance and compare it with accepted product and architecture constraints.',
           'Build an impact map for applications, shared contracts, data, security, compatibility, and delivery.',
           'Write requirements and Given/When/Then scenarios for the requested outcome; document exclusions and why omitted applications or checks cannot be affected.',
-          'Obtain current human acceptance of the requirements and scenarios, then approve a scenario-covered incremental plan.',
-          'Implement file-changing tasks with reviewed behavioral RED, current GREEN checks, and independently accepted task reviews; an explicit NO_FILE plan instead needs reviewed current GREEN evidence for both test-author and implementer tasks.',
+          'Obtain current chat acceptance of the requirements and scenarios, then accept a scenario-covered incremental plan in chat.',
+          'Implement file-changing tasks with evidenced behavioral RED and current GREEN checks; an explicit NO_FILE plan needs current GREEN evidence for both test-author and implementer tasks.',
           'Use the impact-selected verification schedule; unknown impact requires broader application and system checks.',
-          'Complete the planned checks and task reviews, then let the user review and merge the ready PR manually. Confirm the GitHub merge before completion. Retain evidence for verified no-ops and never create an empty commit.',
+          'Complete planned checks, then let the user review and merge the ready PR manually. Confirm the GitHub merge before completion. Retain evidence for verified no-ops and never create an empty commit.',
         ],
         human_gates: ['scope_or_architecture_acceptance_if_changed', 'manual_pr_merge'],
         no_file_completion: true,
@@ -1096,8 +1100,8 @@ export function registerBundleOperations(handlers) {
         route: 'feature',
         sequence: [
           'Retrieve bounded project context from the user description.',
-          'Specify and review requirements and scenarios, then obtain business acceptance.',
-          'Plan and review small cross-application vertical increments before test authoring.',
+          'Specify requirements and scenarios, then obtain the user’s business acceptance in chat.',
+          'Plan small cross-application vertical increments and obtain the user’s plan acceptance in chat before test authoring.',
         ],
         human_gates: ['business_specification_acceptance', 'manual_pr_merge'],
         no_file_completion: false,
@@ -1106,7 +1110,7 @@ export function registerBundleOperations(handlers) {
         route: 'workflow_change',
         sequence: [
           'Pin and inspect the currently active workflow version.',
-          'Specify, plan, test, and review the workflow change using the pinned version.',
+          'Specify and plan the workflow change using the pinned version; obtain required user acceptance in chat.',
           'Evaluate the candidate and let the user review and merge its PR without activating it.',
           'Migrate existing changes only through a separately approved and verified migration.',
         ],
@@ -2213,6 +2217,7 @@ export function registerBundleOperations(handlers) {
     let change = findChange(state, input.change_id);
     let task = change.tasks[input.task_id];
     requireValue(task, 'VALIDATION_FAILED', 'The task must exist.');
+    const currentHead = git(projectRoot, ['rev-parse', 'HEAD']);
     let noFileOutcome = false;
     if (implementerRoles.has(task.role) && [...planDrivenKinds, 'BUGFIX'].includes(change.kind)) {
       requireValue(
@@ -2341,7 +2346,6 @@ export function registerBundleOperations(handlers) {
       (receipt) =>
         receipt.change_id === change.id && receipt.task_id === task.id && receipt.commit_sha,
     );
-    const currentHead = git(projectRoot, ['rev-parse', 'HEAD']);
     const checkpoint = taskCheckpoints.find((receipt) => receipt.commit_sha === currentHead);
     requireValue(
       checkpoint,

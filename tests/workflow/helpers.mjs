@@ -29,12 +29,25 @@ export async function repository(t, options = {}) {
 
   const context = { projectRoot, ...options.context };
   const run = (operation, input = {}) => execute({ operation, input }, context);
+  const accept = async (changeId, artifactId, decision = 'APPROVED') => {
+    const inspection = succeeds(await run('workflow.inspect'), 'workflow.inspect');
+    const change = inspection.changes.find((entry) => entry.id === changeId);
+    const artifact = change?.artifacts.find((entry) => entry.id === artifactId);
+    assert.ok(artifact, `Expected ${artifactId} to be registered on ${changeId}.`);
+    return run('decision.accept', {
+      change_id: changeId,
+      artifact_id: artifactId,
+      decision,
+      expected_revision: inspection.revision,
+      expected_content_hash: artifact.content_hash,
+    });
+  };
   const write = async (relativePath, content) => {
     const absolutePath = path.join(projectRoot, relativePath);
     await mkdir(path.dirname(absolutePath), { recursive: true });
     await writeFile(absolutePath, content);
   };
-  return { projectRoot, run, write, git: (...args) => git(projectRoot, ...args) };
+  return { projectRoot, run, accept, write, git: (...args) => git(projectRoot, ...args) };
 }
 
 export function succeeds(result, operation) {

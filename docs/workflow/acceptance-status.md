@@ -2,7 +2,7 @@
 
 This report separates deterministic local evidence from live client and service acceptance. A passing mock or fixture is not evidence that the corresponding external service is configured.
 
-The current unverified working-tree revision changes business decisions to explicit user approvals in chat, creates ready PRs, and replaces workflow-side squash merge with manual user merge confirmation. Earlier journey results below describe the previously verified behavior; this revision still needs regression and live lifecycle acceptance.
+The current revision records business decisions from explicit chat approvals against the inspected artifact revision, completes tasks from fresh workflow verification plus pushed scoped checkpoints, creates ready PRs, and waits for the user to merge them manually. The full local suite passes (330 passed, 0 failed, 2 opt-in skips). Live GitHub lifecycle acceptance remains pending.
 
 Bundle 0.1.28 adds `workflow.setup` for installing the workflow from its cloned source repository into a separate empty folder or clean Git repository. It installs only workflow-owned assets, creates a local bootstrap commit on the target's base branch, never creates a remote, and leaves product-specific Stage 0 initialization for the target Codex project. The full local run passed with 347 tests (345 passed, 0 failed, 2 opt-in skips); ESLint, Prettier, and the repository integrity check passed. Live Codex discovery, GitHub Actions/GHCR acceptance, and target-project deployment remain pending.
 

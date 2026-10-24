@@ -24,7 +24,7 @@ function response(body, status = 200) {
   });
 }
 
-test('a feature leaves requirements only after valid scenario coverage and current human approval', async (t) => {
+test('a feature leaves requirements after valid scenario coverage and chat acceptance', async (t) => {
   let pull;
   let headSha;
   let headRef;
@@ -37,7 +37,7 @@ test('a feature leaves requirements only after valid scenario coverage and curre
         number: 42,
         html_url: 'https://github.example.test/example-org/project-x/pull/42',
         state: 'open',
-        draft: true,
+        draft: false,
         head: { ref: headRef, sha: headSha, repo: { full_name: 'example-org/project-x' } },
         base: { ref: 'main', sha: 'base-sha', repo: { full_name: 'example-org/project-x' } },
         user: { login: 'change-author', type: 'User' },
@@ -205,35 +205,13 @@ test('a feature leaves requirements only after valid scenario coverage and curre
   assert.equal(missingApproval.transition.to, 'PLANNING');
   assert.equal(missingApproval.transition.ready, false);
 
-  const requirementPending = succeeds(
-    await repo.run('decision.ingest', { change_id: 'F-001', artifact_id: 'REQS-001' }),
-    'decision.ingest',
-  );
-  const scenarioPending = succeeds(
-    await repo.run('decision.ingest', { change_id: 'F-001', artifact_id: 'SCENARIOS-001' }),
-    'decision.ingest',
-  );
-  assert.equal(requirementPending.status, 'AWAITING_HUMAN');
-  assert.equal(scenarioPending.status, 'AWAITING_HUMAN');
-  reviews.push({
-    id: 1,
-    user: { login: 'human-reviewer', type: 'User' },
-    state: 'APPROVED',
-    commit_id: headSha,
-    submitted_at: new Date().toISOString(),
-    body: `Specification accepted.\n${requirementPending.required_marker}\n${scenarioPending.required_marker}\n${specificationResult.task.result.review_marker}`,
-  });
   for (const artifact_id of ['REQS-001', 'SCENARIOS-001']) {
     const decision = succeeds(
-      await repo.run('decision.ingest', { change_id: 'F-001', artifact_id }),
-      'decision.ingest',
+      await repo.accept('F-001', artifact_id),
+      'decision.accept',
     );
-    assert.equal(decision.status, 'APPROVED');
+    assert.equal(decision.approval.status, 'APPROVED');
   }
-  succeeds(
-    await repo.run('review.resolve', { change_id: 'F-001', task_id: 'T-SPECIFICATION' }),
-    'review.resolve',
-  );
 
   const gate = succeeds(await repo.run('stage.inspect', { change_id: 'F-001' }), 'stage.inspect');
   assert.equal(gate.transition.ready, true);
@@ -364,11 +342,6 @@ test('a feature leaves requirements only after valid scenario coverage and curre
     }),
     'task.record_result',
   );
-  const pendingPlan = succeeds(
-    await repo.run('decision.ingest', { change_id: 'F-001', artifact_id: 'PLAN-001' }),
-    'decision.ingest',
-  );
-  assert.equal(pendingPlan.status, 'AWAITING_HUMAN');
   const unapprovedPlanGate = succeeds(
     await repo.run('stage.inspect', { change_id: 'F-001' }),
     'stage.inspect',
@@ -385,23 +358,11 @@ test('a feature leaves requirements only after valid scenario coverage and curre
     'stage.advance',
     'GATE_BLOCKED',
   );
-  reviews.push({
-    id: 2,
-    user: { login: 'human-reviewer', type: 'User' },
-    state: 'APPROVED',
-    commit_id: headSha,
-    submitted_at: new Date().toISOString(),
-    body: `${pendingPlan.required_marker}\n${planningResult.task.result.review_marker}`,
-  });
   const planApproval = succeeds(
-    await repo.run('decision.ingest', { change_id: 'F-001', artifact_id: 'PLAN-001' }),
-    'decision.ingest',
+    await repo.accept('F-001', 'PLAN-001'),
+    'decision.accept',
   );
-  assert.equal(planApproval.status, 'APPROVED');
-  succeeds(
-    await repo.run('review.resolve', { change_id: 'F-001', task_id: 'T-PLAN' }),
-    'review.resolve',
-  );
+  assert.equal(planApproval.approval.status, 'APPROVED');
   const planGate = succeeds(
     await repo.run('stage.inspect', { change_id: 'F-001' }),
     'stage.inspect',
@@ -516,58 +477,8 @@ test('a feature leaves requirements only after valid scenario coverage and curre
     }),
     'task.prepare',
   );
-  assert.equal(blockedImplementation.task.state, 'WAITING_DEPENDENCY');
-  fails(
-    await repo.run('change.checkpoint', {
-      change_id: 'F-001',
-      task_id: 'T-IMPLEMENT',
-      paths: ['src/person-name.mjs'],
-      message: 'feat(F-001): trim person names',
-    }),
-    'change.checkpoint',
-    'TDD_REQUIRED',
-  );
-  reviews.push({
-    id: 2,
-    user: { login: 'human-reviewer', type: 'User' },
-    state: 'APPROVED',
-    commit_id: headSha,
-    submitted_at: new Date().toISOString(),
-    body: redResult.task.result.review_marker,
-  });
-  const testReview = succeeds(
-    await repo.run('review.resolve', { change_id: 'F-001', task_id: 'T-TESTS' }),
-    'review.resolve',
-  );
-  assert.deepEqual(testReview.unblocked_task_ids, ['T-IMPLEMENT']);
-  reviews.push({
-    id: 3,
-    user: { login: 'human-reviewer', type: 'User' },
-    state: 'CHANGES_REQUESTED',
-    commit_id: headSha,
-    submitted_at: new Date().toISOString(),
-    body: redResult.task.result.review_marker,
-  });
-  const revokedTestReview = succeeds(
-    await repo.run('review.resolve', { change_id: 'F-001', task_id: 'T-TESTS' }),
-    'review.resolve',
-  );
-  assert.equal(revokedTestReview.accepted, false);
-  assert.deepEqual(revokedTestReview.blocked_task_ids, ['T-IMPLEMENT']);
-  reviews.push({
-    id: 4,
-    user: { login: 'human-reviewer', type: 'User' },
-    state: 'APPROVED',
-    commit_id: headSha,
-    submitted_at: new Date().toISOString(),
-    body: redResult.task.result.review_marker,
-  });
-  const restoredTestReview = succeeds(
-    await repo.run('review.resolve', { change_id: 'F-001', task_id: 'T-TESTS' }),
-    'review.resolve',
-  );
-  assert.equal(restoredTestReview.review.status, 'ACCEPTED');
-  assert.deepEqual(restoredTestReview.unblocked_task_ids, ['T-IMPLEMENT']);
+  assert.equal(blockedImplementation.task.state, 'READY');
+  assert.equal(redResult.task.review.provider, 'workflow_verification');
   const implementationReady = succeeds(
     await repo.run('task.prepare', {
       change_id: 'F-001',
@@ -612,35 +523,12 @@ test('a feature leaves requirements only after valid scenario coverage and curre
     }),
     'task.record_result',
   );
-  assert.equal(implementationResult.task.state, 'WAITING_REVIEW');
+  assert.equal(implementationResult.task.state, 'DONE');
   const incompleteIncrement = succeeds(
     await repo.run('increment.inspect', { change_id: 'F-001' }),
     'increment.inspect',
   );
-  assert.equal(incompleteIncrement.ready, false);
-  assert.ok(incompleteIncrement.missing.some((item) => item.reason === 'task_review_incomplete'));
-  fails(
-    await repo.run('increment.advance', {
-      change_id: 'F-001',
-      increment_id: 'I-001',
-      expected_revision: incompleteIncrement.state_revision,
-    }),
-    'increment.advance',
-    'GATE_BLOCKED',
-  );
-  reviews.push({
-    id: 5,
-    user: { login: 'human-reviewer', type: 'User' },
-    state: 'APPROVED',
-    commit_id: headSha,
-    submitted_at: new Date().toISOString(),
-    body: implementationResult.task.result.review_marker,
-  });
-  const implementationReview = succeeds(
-    await repo.run('review.resolve', { change_id: 'F-001', task_id: 'T-IMPLEMENT' }),
-    'review.resolve',
-  );
-  assert.equal(implementationReview.task.state, 'DONE');
+  assert.equal(incompleteIncrement.ready, true);
   fails(
     await repo.run('task.prepare', {
       change_id: 'F-001',
@@ -816,16 +704,7 @@ test('a feature leaves requirements only after valid scenario coverage and curre
     await repo.run('increment.inspect', { change_id: 'F-001' }),
     'increment.inspect',
   );
-  assert.equal(awaitingImplementationReview.ready, false);
-  fails(
-    await repo.run('increment.advance', {
-      change_id: 'F-001',
-      increment_id: 'I-002',
-      expected_revision: awaitingImplementationReview.state_revision,
-    }),
-    'increment.advance',
-    'GATE_BLOCKED',
-  );
+  assert.equal(awaitingImplementationReview.ready, true);
   reviews.push({
     id: 7,
     user: { login: 'human-reviewer', type: 'User' },
@@ -868,16 +747,7 @@ test('a feature leaves requirements only after valid scenario coverage and curre
   assert.equal(integrationGate.transition.to, 'INTEGRATION');
   assert.equal(integrationGate.transition.ready, true);
   const integrationState = succeeds(await repo.run('workflow.inspect'), 'workflow.inspect');
-  fails(
-    await repo.run('stage.advance', {
-      change_id: 'F-001',
-      expected_stage: 'IMPLEMENTATION',
-      expected_revision: integrationState.revision,
-      to: 'INTEGRATION',
-    }),
-    'stage.advance',
-    'GATE_BLOCKED',
-  );
+  assert.equal(integrationGate.transition.ready, true);
   reviews.push({
     id: 9,
     user: { login: 'human-reviewer', type: 'User' },
@@ -900,36 +770,15 @@ test('a feature leaves requirements only after valid scenario coverage and curre
     'stage.advance',
   );
   assert.equal(integrationStage.change.stage, 'INTEGRATION');
-  const pendingIntegrationDecision = succeeds(
-    await repo.run('decision.ingest', { change_id: 'F-001', artifact_id: 'PLAN-001' }),
-    'decision.ingest',
-  );
-  assert.equal(pendingIntegrationDecision.status, 'AWAITING_HUMAN');
-  reviews.push({
-    id: 10,
-    user: { login: 'human-reviewer', type: 'User' },
-    state: 'APPROVED',
-    commit_id: headSha,
-    submitted_at: new Date().toISOString(),
-    body: pendingIntegrationDecision.required_marker,
-  });
-  const integrationDecision = succeeds(
-    await repo.run('decision.ingest', { change_id: 'F-001', artifact_id: 'PLAN-001' }),
-    'decision.ingest',
-  );
-  assert.equal(integrationDecision.status, 'APPROVED');
-  const readyPullRequest = succeeds(
-    await repo.run('pr.mark_ready', { change_id: 'F-001' }),
-    'pr.mark_ready',
-  );
-  assert.equal(readyPullRequest.head_sha, headSha);
-  assert.equal(readyPullRequest.ci.all_passed, true);
+  pull.state = 'closed';
+  pull.merged = true;
+  pull.merge_commit_sha = 'd'.repeat(40);
   const mergedFeature = succeeds(
-    await repo.run('change.squash_merge', { change_id: 'F-001' }),
-    'change.squash_merge',
+    await repo.run('change.confirm_merge', { change_id: 'F-001' }),
+    'change.confirm_merge',
   );
   assert.equal(mergedFeature.merged, true);
-  assert.equal(mergedFeature.merge_method, 'squash');
+  assert.equal(mergedFeature.merge_method, 'user');
   assert.equal(mergedFeature.head_sha, headSha);
   assert.equal(mergedFeature.merge_commit_sha, 'd'.repeat(40));
   const completionGate = succeeds(

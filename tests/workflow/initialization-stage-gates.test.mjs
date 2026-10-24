@@ -60,7 +60,7 @@ function response(body, status = 200) {
   });
 }
 
-test('project initialization advances only with validated artifacts and current authenticated decisions', async (t) => {
+test('project initialization advances with validated artifacts and chat decisions', async (t) => {
   let pull;
   let headSha;
   const reviews = [];
@@ -72,7 +72,7 @@ test('project initialization advances only with validated artifacts and current 
         number: 42,
         html_url: 'https://github.example.test/example-org/project-x/pull/42',
         state: 'open',
-        draft: true,
+        draft: false,
         head: { ref: headRef, sha: headSha, repo: { full_name: 'example-org/project-x' } },
         base: { ref: 'main', sha: 'base-sha', repo: { full_name: 'example-org/project-x' } },
         user: { login: 'change-author', type: 'User' },
@@ -157,7 +157,6 @@ test('project initialization advances only with validated artifacts and current 
   );
 
   const artifactRefs = [];
-  const decisionMarkers = [];
   for (let index = 0; index < foundations.length; index += 1) {
     const [type, title, data] = foundations[index];
     const artifact = succeeds(
@@ -211,36 +210,14 @@ test('project initialization advances only with validated artifacts and current 
     }),
     'task.record_result',
   );
+  assert.equal(foundationResult.task.state, 'DONE');
 
-  for (let index = 0; index < artifactRefs.length; index += 1) {
-    const artifact = artifactRefs[index];
-    const pending = succeeds(
-      await repo.run('decision.ingest', {
-        change_id: 'INIT-001',
-        artifact_id: artifact.id,
-      }),
-      'decision.ingest',
-    );
-    assert.equal(pending.status, 'AWAITING_HUMAN');
-    decisionMarkers.push(pending.required_marker);
-  }
-  reviews.push({
-    id: 1,
-    user: { login: 'human-reviewer', type: 'User' },
-    state: 'APPROVED',
-    commit_id: headSha,
-    submitted_at: new Date().toISOString(),
-    body: `Approved.\n${decisionMarkers.join('\n')}\n${foundationResult.task.result.review_marker}`,
-  });
   for (const artifact of artifactRefs) {
     const accepted = succeeds(
-      await repo.run('decision.ingest', {
-        change_id: 'INIT-001',
-        artifact_id: artifact.id,
-      }),
-      'decision.ingest',
+      await repo.accept('INIT-001', artifact.id),
+      'decision.accept',
     );
-    assert.equal(accepted.status, 'APPROVED');
+    assert.equal(accepted.approval.status, 'APPROVED');
   }
 
   const originalArtifact = await readFile(
@@ -280,44 +257,6 @@ test('project initialization advances only with validated artifacts and current 
   repo.git('commit', '-m', 'docs: update initialization notes');
   repo.git('push', 'origin', started.change.branch);
   headSha = repo.git('rev-parse', 'HEAD');
-  const staleApproval = fails(
-    await repo.run('stage.advance', {
-      change_id: 'INIT-001',
-      expected_stage: 'FOUNDATIONS',
-      to: 'ARCHITECTURE',
-      expected_revision: state.revision,
-    }),
-    'stage.advance',
-    'GATE_BLOCKED',
-  );
-  assert.ok(
-    staleApproval.details.gate.missing.every((item) =>
-      ['authenticated_approval_stale', 'authenticated_approval_missing'].includes(item.reason),
-    ),
-    JSON.stringify(staleApproval.details.gate),
-  );
-  reviews.push({
-    id: 10,
-    user: { login: 'human-reviewer', type: 'User' },
-    state: 'APPROVED',
-    commit_id: headSha,
-    submitted_at: new Date().toISOString(),
-    body: `Reapproved for current PR head.\n${decisionMarkers.join('\n')}\n${foundationResult.task.result.review_marker}`,
-  });
-  for (const artifact of artifactRefs) {
-    const accepted = succeeds(
-      await repo.run('decision.ingest', {
-        change_id: 'INIT-001',
-        artifact_id: artifact.id,
-      }),
-      'decision.ingest',
-    );
-    assert.equal(accepted.status, 'APPROVED');
-  }
-  succeeds(
-    await repo.run('review.resolve', { change_id: 'INIT-001', task_id: 'T-FOUNDATIONS' }),
-    'review.resolve',
-  );
   const refreshedState = succeeds(await repo.run('workflow.inspect'), 'workflow.inspect');
   const advanced = succeeds(
     await repo.run('stage.advance', {
@@ -392,41 +331,15 @@ test('project initialization advances only with validated artifacts and current 
     }),
     'task.record_result',
   );
+  assert.equal(architectureResult.task.state, 'DONE');
 
-  const architectureMarkers = [];
-  for (const artifact of architectureRefs) {
-    const pending = succeeds(
-      await repo.run('decision.ingest', {
-        change_id: 'INIT-001',
-        artifact_id: artifact.id,
-      }),
-      'decision.ingest',
-    );
-    assert.equal(pending.status, 'AWAITING_HUMAN');
-    architectureMarkers.push(pending.required_marker);
-  }
-  reviews.push({
-    id: 20,
-    user: { login: 'human-reviewer', type: 'User' },
-    state: 'APPROVED',
-    commit_id: headSha,
-    submitted_at: new Date().toISOString(),
-    body: `Architecture approved.\n${architectureMarkers.join('\n')}\n${architectureResult.task.result.review_marker}`,
-  });
   for (const artifact of architectureRefs) {
     const accepted = succeeds(
-      await repo.run('decision.ingest', {
-        change_id: 'INIT-001',
-        artifact_id: artifact.id,
-      }),
-      'decision.ingest',
+      await repo.accept('INIT-001', artifact.id),
+      'decision.accept',
     );
-    assert.equal(accepted.status, 'APPROVED');
+    assert.equal(accepted.approval.status, 'APPROVED');
   }
-  succeeds(
-    await repo.run('review.resolve', { change_id: 'INIT-001', task_id: 'T-ARCHITECTURE' }),
-    'review.resolve',
-  );
   const architectureGate = succeeds(
     await repo.run('stage.inspect', { change_id: 'INIT-001' }),
     'stage.inspect',
@@ -448,20 +361,16 @@ test('project initialization advances only with validated artifacts and current 
     'stage.inspect',
   );
   assert.equal(mergeGate.transition.ready, false);
-  assert.deepEqual(mergeGate.transition.missing, ['verified_squash_merge']);
-  const ready = succeeds(
-    await repo.run('pr.mark_ready', { change_id: 'INIT-001' }),
-    'pr.mark_ready',
-  );
-  assert.equal(ready.head_sha, headSha);
-  assert.equal(ready.ci.all_passed, true);
+  assert.deepEqual(mergeGate.transition.missing, ['manual_merge_confirmation']);
+  pull.state = 'closed';
+  pull.merged = true;
+  pull.merge_commit_sha = 'f'.repeat(40);
   const merged = succeeds(
-    await repo.run('change.squash_merge', { change_id: 'INIT-001' }),
-    'change.squash_merge',
+    await repo.run('change.confirm_merge', { change_id: 'INIT-001' }),
+    'change.confirm_merge',
   );
   assert.equal(merged.merged, true);
-  assert.equal(merged.merge_method, 'squash');
-  assert.equal(merged.merge_commit_sha, 'f'.repeat(40));
+  assert.equal(merged.merge_method, 'user');
   const completionGate = succeeds(
     await repo.run('stage.inspect', { change_id: 'INIT-001' }),
     'stage.inspect',

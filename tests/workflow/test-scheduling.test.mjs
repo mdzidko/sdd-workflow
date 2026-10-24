@@ -371,23 +371,13 @@ test('maintenance test scope comes from the current approved impact map', async 
     }),
     'artifact.create',
   );
+  succeeds(await repo.accept('M-APPROVED-IMPACT', 'IMPACT-MAP'), 'decision.accept');
 
   const state = JSON.parse(await stateBytes(repo));
   const change = state.changes['M-APPROVED-IMPACT'];
   const impactMap = change.artifacts.find((artifact) => artifact.id === 'IMPACT-MAP');
   const headSha = repo.git('rev-parse', 'HEAD');
   change.pull_request = { head_sha: headSha };
-  change.approvals = [
-    {
-      artifact_id: impactMap.id,
-      status: 'APPROVED',
-      provider: 'github',
-      subject_hash: impactMap.content_hash,
-      head_sha: headSha,
-      review_id: 7,
-      reviewer: 'human-reviewer',
-    },
-  ];
   change.stage_history = [
     {
       to: 'PLANNING',

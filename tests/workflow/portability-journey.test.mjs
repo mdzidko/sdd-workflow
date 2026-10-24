@@ -70,22 +70,12 @@ test('the unchanged workflow runs in unrelated projects with distinct branches, 
       }),
       'artifact.create',
     );
+    succeeds(await repo.accept(project.changeId, 'IMPACT-MAP'), 'decision.accept');
     const state = JSON.parse(await stateBytes(repo));
     const persistedChange = state.changes[project.changeId];
     const impactMap = persistedChange.artifacts.find((artifact) => artifact.id === 'IMPACT-MAP');
     const headSha = repo.git('rev-parse', 'HEAD');
     persistedChange.pull_request = { head_sha: headSha };
-    persistedChange.approvals = [
-      {
-        artifact_id: impactMap.id,
-        status: 'APPROVED',
-        provider: 'github',
-        subject_hash: impactMap.content_hash,
-        head_sha: headSha,
-        review_id: 1,
-        reviewer: 'fixture-human',
-      },
-    ];
     persistedChange.stage_history = [
       {
         to: 'PLANNING',

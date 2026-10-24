@@ -151,13 +151,14 @@ test('caller-supplied claims cannot create a human business approval', async (t)
   await startFeature(repo);
   const before = await stateBytes(repo);
   fails(
-    await repo.run('decision.ingest', {
+    await repo.run('decision.accept', {
       change_id: 'F-001',
+      artifact_id: 'REQ-001',
       kind: 'business',
       source: { actor: 'human', approved: true },
     }),
-    'decision.ingest',
-    'UNTRUSTED_DECISION',
+    'decision.accept',
+    'VALIDATION_FAILED',
   );
   const after = JSON.parse(await stateBytes(repo));
   const previous = JSON.parse(before);

@@ -27,7 +27,7 @@ function pullRequest(headSha, overrides = {}) {
     number: 42,
     html_url: 'https://github.example.test/example-org/project-x/pull/42',
     state: 'open',
-    draft: true,
+    draft: false,
     head: {
       ref: 'feature/F-001-allow-adding-a-person',
       sha: headSha,
@@ -108,7 +108,7 @@ async function configuredCiChange(t, { checkStatus, sleepImpl } = {}) {
   return prepared.repo;
 }
 
-test('PR ensure creates one draft from a pushed task checkpoint and refreshes it idempotently', async (t) => {
+test('PR ensure creates a ready PR from a pushed task checkpoint and refreshes it idempotently', async (t) => {
   const requests = [];
   let currentHead;
   let currentPull;
@@ -133,10 +133,10 @@ test('PR ensure creates one draft from a pushed task checkpoint and refreshes it
 
   const created = succeeds(await repo.run('pr.ensure', { change_id: 'F-001' }), 'pr.ensure');
   assert.equal(created.pull_request.number, 42);
-  assert.equal(created.pull_request.draft, true);
+  assert.equal(created.pull_request.draft, false);
   assert.ok(requests.every((request) => request.authorization === 'Bearer fixture-token'));
   assert.doesNotMatch(JSON.stringify(created), /fixture-token/);
-  assert.equal(JSON.parse(requests[1].body).draft, true);
+  assert.equal(JSON.parse(requests[1].body).draft, false);
   assert.match(JSON.parse(requests[1].body).body, /F-001/);
 
   const refreshed = succeeds(await repo.run('pr.ensure', { change_id: 'F-001' }), 'pr.ensure');
