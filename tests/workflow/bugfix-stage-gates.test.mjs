@@ -23,14 +23,6 @@ function response(body, status = 200) {
   });
 }
 
-function createReviewTimestampGenerator() {
-  let timestamp = Date.now();
-  return () => {
-    timestamp = Math.max(Date.now(), timestamp + 1);
-    return new Date(timestamp).toISOString();
-  };
-}
-
 async function startBugfix(repo) {
   await initialize(repo);
   succeeds(
@@ -136,7 +128,6 @@ test('a reproduced RED regression test and chat acceptance advance a bugfix to i
   let headSha;
   let headRef;
   const reviews = [];
-  const nextReviewTimestamp = createReviewTimestampGenerator();
   const fetchImpl = async (url, init) => {
     const parsed = new URL(String(url));
     if (init.method === 'GET' && parsed.pathname.endsWith('/pulls')) return response([]);
@@ -303,6 +294,7 @@ test('a reproduced RED regression test and chat acceptance advance a bugfix to i
     }),
     'task.record_result',
   );
+  assert.equal(result.task.state, 'DONE');
   let state = succeeds(await repo.run('workflow.inspect'), 'workflow.inspect');
   fails(
     await repo.run('stage.advance', {
@@ -325,10 +317,7 @@ test('a reproduced RED regression test and chat acceptance advance a bugfix to i
       ),
     ),
   );
-  const intent = succeeds(
-    await repo.accept('B-002', 'DEFECT-002'),
-    'decision.accept',
-  );
+  const intent = succeeds(await repo.accept('B-002', 'DEFECT-002'), 'decision.accept');
   assert.equal(intent.approval.status, 'APPROVED');
   state = succeeds(await repo.run('workflow.inspect'), 'workflow.inspect');
   const advanced = succeeds(

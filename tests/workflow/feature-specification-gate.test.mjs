@@ -188,6 +188,7 @@ test('a feature leaves requirements after valid scenario coverage and chat accep
     }),
     'task.record_result',
   );
+  assert.equal(specificationResult.task.state, 'DONE');
 
   const specCheck = succeeds(
     await repo.run('spec.validate', {
@@ -206,10 +207,7 @@ test('a feature leaves requirements after valid scenario coverage and chat accep
   assert.equal(missingApproval.transition.ready, false);
 
   for (const artifact_id of ['REQS-001', 'SCENARIOS-001']) {
-    const decision = succeeds(
-      await repo.accept('F-001', artifact_id),
-      'decision.accept',
-    );
+    const decision = succeeds(await repo.accept('F-001', artifact_id), 'decision.accept');
     assert.equal(decision.approval.status, 'APPROVED');
   }
 
@@ -342,6 +340,7 @@ test('a feature leaves requirements after valid scenario coverage and chat accep
     }),
     'task.record_result',
   );
+  assert.equal(planningResult.task.state, 'DONE');
   const unapprovedPlanGate = succeeds(
     await repo.run('stage.inspect', { change_id: 'F-001' }),
     'stage.inspect',
@@ -358,10 +357,7 @@ test('a feature leaves requirements after valid scenario coverage and chat accep
     'stage.advance',
     'GATE_BLOCKED',
   );
-  const planApproval = succeeds(
-    await repo.accept('F-001', 'PLAN-001'),
-    'decision.accept',
-  );
+  const planApproval = succeeds(await repo.accept('F-001', 'PLAN-001'), 'decision.accept');
   assert.equal(planApproval.approval.status, 'APPROVED');
   const planGate = succeeds(
     await repo.run('stage.inspect', { change_id: 'F-001' }),
@@ -745,8 +741,6 @@ test('a feature leaves requirements after valid scenario coverage and chat accep
     'stage.inspect',
   );
   assert.equal(integrationGate.transition.to, 'INTEGRATION');
-  assert.equal(integrationGate.transition.ready, true);
-  const integrationState = succeeds(await repo.run('workflow.inspect'), 'workflow.inspect');
   assert.equal(integrationGate.transition.ready, true);
   reviews.push({
     id: 9,

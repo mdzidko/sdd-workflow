@@ -69,7 +69,7 @@ test('route playbooks preserve initialization, defect, and maintenance edge-case
     /explicit `NO_FILE` plan[\s\S]*both test-author and implementer tasks need current GREEN evidence/i,
   );
   assert.match(routes, /file-changing plans[\s\S]*behavioral RED before implementation/i);
-  assert.match(foundations, /explicit product acceptance before final architecture/i);
+  assert.match(foundations, /record product acceptance in chat before final architecture/i);
   assert.match(specification, /do not label the behavior a defect by assumption/i);
   assert.match(planning, /verified no-op may complete without a file change or empty commit/i);
 });

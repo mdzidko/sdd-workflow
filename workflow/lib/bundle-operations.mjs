@@ -896,9 +896,7 @@ async function inspectBugfixTransition(projectRoot, change, state) {
       task.review?.provider !== 'workflow_verification'
     )
       return false;
-    if (
-      !task.result.expected_red_run_ids.every((runId) => task.result.run_ids.includes(runId))
-    )
+    if (!task.result.expected_red_run_ids.every((runId) => task.result.run_ids.includes(runId)))
       return false;
     return task.result.expected_red_run_ids.every((runId) => {
       const run = state.runs[runId];
@@ -1058,11 +1056,7 @@ export function registerBundleOperations(handlers) {
           'Obtain explicit architecture acceptance before repository bootstrap.',
           'Bootstrap only approved foundations, then verify fresh-checkout and recovery journeys.',
         ],
-        human_gates: [
-          'product_acceptance',
-          'architecture_acceptance',
-          'manual_pr_merge',
-        ],
+        human_gates: ['product_acceptance', 'architecture_acceptance', 'manual_pr_merge'],
         no_file_completion: false,
       },
       BUGFIX: {

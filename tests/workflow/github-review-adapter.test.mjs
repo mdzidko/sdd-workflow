@@ -21,7 +21,9 @@ async function acceptedArtifactProject(t, { fetchImpl = async () => response([])
     context: { env: { GH_TOKEN: 'fixture-token', GITHUB_API_URL: apiUrl }, fetchImpl },
   });
   const remote = await mkdtemp(path.join(tmpdir(), 'codex-workflow-chat-approval-'));
-  t.after(() => import('node:fs/promises').then(({ rm }) => rm(remote, { recursive: true, force: true })));
+  t.after(() =>
+    import('node:fs/promises').then(({ rm }) => rm(remote, { recursive: true, force: true })),
+  );
   execFileSync('git', ['init', '--bare', remote], { windowsHide: true });
   repo.git('remote', 'add', 'origin', remote);
   repo.git('push', '-u', 'origin', 'main');
@@ -38,13 +40,15 @@ async function acceptedArtifactProject(t, { fetchImpl = async () => response([])
     },
   });
   await startFeature(repo);
-  await repo.run('artifact.create', {
-    change_id: 'F-001',
-    id: 'REQ-001',
-    type: 'requirements',
-    title: 'Feature requirements',
-    data: { requirements: [{ id: 'R-001', description: 'A person can be added.' }] },
-  }).then((result) => succeeds(result, 'artifact.create'));
+  await repo
+    .run('artifact.create', {
+      change_id: 'F-001',
+      id: 'REQ-001',
+      type: 'requirements',
+      title: 'Feature requirements',
+      data: { requirements: [{ id: 'R-001', description: 'A person can be added.' }] },
+    })
+    .then((result) => succeeds(result, 'artifact.create'));
   return repo;
 }
 
@@ -91,10 +95,7 @@ test('chat acceptance rejects missing decisions and stale artifact content', asy
 
 test('a rejection in chat records REJECTED against the exact current artifact', async (t) => {
   const repo = await acceptedArtifactProject(t);
-  const rejected = succeeds(
-    await repo.accept('F-001', 'REQ-001', 'REJECTED'),
-    'decision.accept',
-  );
+  const rejected = succeeds(await repo.accept('F-001', 'REQ-001', 'REJECTED'), 'decision.accept');
   assert.equal(rejected.approval.status, 'REJECTED');
   assert.equal(rejected.approval.provider, 'codex_chat');
 });

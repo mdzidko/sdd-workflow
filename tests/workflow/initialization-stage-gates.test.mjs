@@ -213,10 +213,7 @@ test('project initialization advances with validated artifacts and chat decision
   assert.equal(foundationResult.task.state, 'DONE');
 
   for (const artifact of artifactRefs) {
-    const accepted = succeeds(
-      await repo.accept('INIT-001', artifact.id),
-      'decision.accept',
-    );
+    const accepted = succeeds(await repo.accept('INIT-001', artifact.id), 'decision.accept');
     assert.equal(accepted.approval.status, 'APPROVED');
   }
 
@@ -334,10 +331,7 @@ test('project initialization advances with validated artifacts and chat decision
   assert.equal(architectureResult.task.state, 'DONE');
 
   for (const artifact of architectureRefs) {
-    const accepted = succeeds(
-      await repo.accept('INIT-001', artifact.id),
-      'decision.accept',
-    );
+    const accepted = succeeds(await repo.accept('INIT-001', artifact.id), 'decision.accept');
     assert.equal(accepted.approval.status, 'APPROVED');
   }
   const architectureGate = succeeds(

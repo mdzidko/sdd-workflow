@@ -31,13 +31,6 @@ const github = {
   required_checks: ['workflow-ci / verify'],
 };
 
-function response(body, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { 'content-type': 'application/json' },
-  });
-}
-
 const migration = {
   id: 'schema-v2',
   service: 'migrate',
@@ -257,15 +250,16 @@ test('a bug report with verified no-file evidence requires chat acceptance', asy
   const gate = succeeds(await repo.run('stage.inspect', { change_id: 'B-FIXED' }), 'stage.inspect');
   assert.equal(gate.transition.to, 'COMPLETE');
   assert.equal(gate.transition.ready, false);
-  assert.ok(
-    gate.transition.missing.some((item) => item.reason === 'chat_approval_missing'),
-  );
+  assert.ok(gate.transition.missing.some((item) => item.reason === 'chat_approval_missing'));
   assert.ok(
     gate.transition.evidence.some(
       (item) => item.type === 'verified_no_file_deployment' && item.deployment_id === 'D-FIXED',
     ),
   );
-  const rejected = succeeds(await repo.accept('B-FIXED', 'DEFECT-FIXED', 'REJECTED'), 'decision.accept');
+  const rejected = succeeds(
+    await repo.accept('B-FIXED', 'DEFECT-FIXED', 'REJECTED'),
+    'decision.accept',
+  );
   assert.equal(rejected.approval.status, 'REJECTED');
   const inspected = succeeds(await repo.run('workflow.inspect'), 'workflow.inspect');
   fails(
@@ -286,7 +280,10 @@ test('a bug report with verified no-file evidence requires chat acceptance', asy
   );
   assert.equal(finalGate.transition.ready, true);
   const finalState = succeeds(await repo.run('workflow.inspect'), 'workflow.inspect');
-  assert.equal(finalState.changes.find((change) => change.id === 'B-FIXED').approvals[0].status, 'APPROVED');
+  assert.equal(
+    finalState.changes.find((change) => change.id === 'B-FIXED').approvals[0].status,
+    'APPROVED',
+  );
   const approvedState = succeeds(await repo.run('workflow.inspect'), 'workflow.inspect');
   const completed = succeeds(
     await repo.run('stage.advance', {

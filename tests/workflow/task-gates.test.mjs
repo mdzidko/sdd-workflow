@@ -511,8 +511,7 @@ test('a reviewed no-file maintenance plan accepts GREEN verification and records
 });
 
 test('a no-file maintenance increment requires current GREEN evidence for both tasks', async (t) => {
-  const { repo, taskAuthor, implementer, headSha } =
-    await preparedNoFileMaintenanceWithReviews(t);
+  const { repo, taskAuthor, implementer, headSha } = await preparedNoFileMaintenanceWithReviews(t);
 
   const preparedTest = succeeds(
     await repo.run('task.prepare', { change_id: 'M-REVIEWED-NO-FILE', task: taskAuthor }),
@@ -663,7 +662,10 @@ test('a chat-approved no-file maintenance increment waits for the user to merge 
     'decision.accept',
   );
   assert.equal(decision.approval.status, 'APPROVED');
-  assert.equal((await repo.run('pr.ensure', { change_id: 'M-REVIEWED-NO-FILE' })).data.pull_request.draft, false);
+  assert.equal(
+    (await repo.run('pr.ensure', { change_id: 'M-REVIEWED-NO-FILE' })).data.pull_request.draft,
+    false,
+  );
   const pendingMerge = fails(
     await repo.run('change.confirm_merge', { change_id: 'M-REVIEWED-NO-FILE' }),
     'change.confirm_merge',

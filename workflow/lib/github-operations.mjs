@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import { atomicWrite, git, hash, requireValue, safePath, WorkflowError } from './support.mjs';
 import { validateArtifact } from './contracts.mjs';
-import { findChange, load, readJson, save } from './state.mjs';
+import { findChange, load, save } from './state.mjs';
 import {
   githubDownload,
   githubConfiguration,
@@ -874,10 +874,7 @@ export function registerGithubOperations(handlers) {
       'PR_NOT_FOUND',
       'Create the pull request before waiting for its manual merge.',
     );
-    const { pull_request: pull } = await handlers['pr.refresh'](
-      { change_id: change.id },
-      context,
-    );
+    const { pull_request: pull } = await handlers['pr.refresh']({ change_id: change.id }, context);
     requireValue(
       pull.state === 'closed' &&
         pull.merged &&
