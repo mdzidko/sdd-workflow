@@ -79,7 +79,7 @@ test('installation copies declared assets and runnable operations while preservi
 
 test('workflow setup installs into a new folder, creates a local base commit, and leaves project initialization for Codex', async (t) => {
   const projectRoot = await mkdtemp(path.join(tmpdir(), 'codex-workflow-setup-'));
-  t.after(() => rm(projectRoot, { recursive: true, force: true }));
+  t.after(() => rm(projectRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
   const env = {
     ...process.env,
     GIT_CEILING_DIRECTORIES: path.dirname(projectRoot),
