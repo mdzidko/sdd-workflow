@@ -17,7 +17,7 @@ export function git(projectRoot, ...args) {
 
 export async function repository(t, options = {}) {
   const projectRoot = await mkdtemp(path.join(tmpdir(), 'codex-workflow-test-'));
-  t.after(() => rm(projectRoot, { recursive: true, force: true }));
+  t.after(() => rm(projectRoot, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 }));
   git(projectRoot, 'init');
   git(projectRoot, 'config', 'user.name', 'Workflow Test');
   git(projectRoot, 'config', 'user.email', 'workflow-test@example.invalid');
